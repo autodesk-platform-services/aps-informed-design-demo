@@ -1,0 +1,11 @@
+{
+  "credentials": {
+    "clientId": "",
+    "clientSecret": ""
+  },
+  "baseUrl": "https://developer.api.autodesk.com/industrialized-construction/informed-design/v1",
+  "delimiter": "|",
+  "serviceAccountName": "",
+  "accessType": "ACC",
+  "tokenScope": "data:read data:write data:create"
+}

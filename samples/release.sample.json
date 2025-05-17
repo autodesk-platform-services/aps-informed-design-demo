@@ -1,0 +1,97 @@
+{
+    "productId": "{{PRODUCT ID}}",
+    "state": "ACTIVE",
+    "isConfigurable": true,
+    "authoringAppVersion": "2025",
+    "notes": "Release notes for the new Release",
+    "dataSetLocation": "<<Path To Model Zip (i.e. /Users/ind/models/model.zip)>> or {{OBJECT KEY}}",
+    "thumbnails": [
+        {
+            "representation": "[Primary]",
+            "thumbnail": "<<Path To THUMBNAIL file (i.e. /Users/ind/models/thumbnail_[Primary].bmp)>> or {{OBJECT KEY}}"
+        }
+    ],
+    "sourceContext": {
+        "project": "\\Wall.ipj",
+        "baseModel": "Wall - 2025\\Wall Assembly.iam"
+    },
+    "parameters": [
+        {
+            "name": "Height",
+            "type": "NUMERIC",
+            "defaultValue": 96,
+            "unit": "in",
+            "isInput": true,
+            "allowCustomValue": true
+        },
+        {
+            "name": "Width",
+            "type": "NUMERIC",
+            "defaultValue": 18,
+            "unit": "in",
+            "isInput": true,
+            "allowCustomValue": true
+        }
+    ],
+    "outputSettings": [
+        {
+            "type": "BOM",
+            "representations": [
+                "[Primary]",
+                "Medium"
+            ]
+        },
+        {
+            "type": "GLB",
+            "representations": [
+                "[Primary]",
+                "Medium"
+            ]
+        },
+        {
+            "type": "INV"
+        },
+        {
+            "type": "PDF",
+            "templatePaths": [
+                "Wall - 2025\\Wall.dwg"
+            ]
+        },
+        {
+            "type": "SAT",
+            "representations": [
+                "[Primary]",
+                "Medium"
+            ]
+        },
+        {
+            "type": "STEP",
+            "representations": [
+                "[Primary]",
+                "Medium"
+            ]
+        },
+        {
+            "type": "THUMBNAIL",
+            "representations": [
+                "[Primary]",
+                "Medium"
+            ]
+        },
+        {
+            "type": "DWG",
+            "templatePaths": [
+                "Wall - 2025\\Wall.dwg"
+            ]
+        },
+        {
+            "type": "RFA",
+            "family": "Wall-100",
+            "category": "Generic Models",
+            "representations": [
+                "[Primary]",
+                "Medium"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "ind-api-demo",
+  "version": "1.0.0",
+  "description": "Simple command line nodejs demo app for the Informed Design API",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://git.autodesk.com/akensoa/ind-api-demo.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@inquirer/prompts": "^7.3.1",
+    "fetch-blob": "^4.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^3.3.2",
+    "ora": "^8.2.0"
+  }
+}
