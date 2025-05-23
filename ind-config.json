@@ -7,5 +7,5 @@
   "delimiter": "|",
   "serviceAccountName": "",
   "accessType": "ACC",
-  "tokenScope": "data:read data:write data:create"
+  "tokenScope": "data:read data:write data:create account:read"
 }
