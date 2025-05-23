@@ -23,11 +23,11 @@ You can also use the SSA manager located at https://ssa-manager.autodesk.io/ to 
         "clientId": "<The APS App Client ID>",
         "clientSecret": "<APS App Client Secret>"
     },
-    "baseUrl": "https://api.dc.autodesk.com/v2",
+    "baseUrl": "https://developer.api.autodesk.com/industrialized-construction/informed-design/v1",
     "delimiter": "|",
     "serviceAccountName": "<The name of the service account>",
     "accessType": "ACC",
-    "tokenScope": "data:read data:write data:create"
+    "tokenScope": "data:read data:write data:create account:read"
 }
 ```
 
