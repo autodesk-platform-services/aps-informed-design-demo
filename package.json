@@ -1,0 +1,78 @@
+{
+  "name": "ind-demo-desktop",
+  "version": "0.1.2",
+  "description": "Informed Design Demo Desktop Application",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build": "npm run build:frontend && npm run build:backend && npm run build:electron",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "node scripts/prepare-backend.js",
+    "build:electron": "electron-builder",
+    "pack": "electron-builder --dir",
+    "postinstall": "cd frontend && npm install && cd ../backend && npm install"
+  },
+  "build": {
+    "appId": "com.autodesk.informed-design-demo",
+    "productName": "Informed Design Demo",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "electron/**/*",
+      "frontend/build/**/*",
+      "backend/**/*",
+      "backend/node_modules/**/*",
+      "!backend/.env.bak",
+      "!backend/**/*.test.js",
+      "!backend/**/*.spec.js"
+    ],
+    "asarUnpack": [
+      "backend/**/*",
+      "backend/node_modules/**/*",
+      "electron/backend-wrapper.cjs"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/node_modules",
+        "to": "app.asar.unpacked/backend/node_modules",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "backend/.env",
+        "to": "app.asar.unpacked/backend/.env"
+      }
+    ],
+    "mac": {
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "dmg": {
+      "title": "Informed Design Demo ${version}",
+      "icon": "assets/icon.icns"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Informed Design Demo"
+    }
+  },
+  "devDependencies": {
+    "electron": "^40.4.1",
+    "electron-builder": "^26.7.0"
+  }
+}

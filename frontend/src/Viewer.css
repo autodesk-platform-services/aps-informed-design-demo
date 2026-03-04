@@ -1,0 +1,77 @@
+.viewer-container {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  position: relative;
+  background: #EAEAEA;
+  overflow: hidden;
+}
+
+.viewer-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.viewer-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #3C3C3C;
+  z-index: 10;
+  padding: 20px;
+}
+
+.viewer-loading .spinner {
+  border: 4px solid rgba(60, 60, 60, 0.2);
+  border-top: 4px solid #3C3C3C;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+.viewer-loading .loading-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3C3C3C;
+  margin: 0 0 8px 0;
+}
+
+.viewer-loading .loading-subtitle {
+  font-size: 14px;
+  color: #666666;
+  margin: 0;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.viewer-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: white;
+  background: rgba(255, 0, 0, 0.1);
+  padding: 20px;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+.viewer-error h2 {
+  margin: 0 0 10px 0;
+  color: #ff4444;
+}
+
+.viewer-error p {
+  margin: 0;
+  color: #ffffff;
+}
+
