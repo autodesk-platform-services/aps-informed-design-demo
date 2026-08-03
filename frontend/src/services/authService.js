@@ -61,14 +61,14 @@ export const setCustomApsCredentials = async (credentials) => {
  * direct call was to `developer.api.autodesk.com/userprofile/v1/users/@me`,
  * which now answers **410 Gone** for a valid token — that endpoint is retired.
  * (It still returns 401 for an *invalid* token, which is why the failure was
- * easy to misread as an auth problem.) The backend proxies Profile API **v2**
- * on `api.userprofile.autodesk.com`, which also needs an `x-ads-region` header
- * that belongs on the server side.
+ * easy to misread as an auth problem.)
  *
- * Requires the `user-profile:read` scope.
+ * The backend proxies `api.userprofile.autodesk.com/userinfo`, the OIDC UserInfo
+ * endpoint, which returns snake_case claims (`name`, `given_name`,
+ * `family_name`, `preferred_username`, `email`). Requires `user-profile:read`.
  *
  * @param {string} accessToken - The access token
- * @returns {Promise<Object>} - User profile data (v2 shape)
+ * @returns {Promise<Object>} - OIDC user claims
  */
 export const fetchUserProfile = async (accessToken) => {
   if (!accessToken) {
