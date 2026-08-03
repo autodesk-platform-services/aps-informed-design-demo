@@ -8,9 +8,15 @@
  * mirrors every var to a REACT_APP_<NAME> copy so CRA picks it up. You never
  * write the prefix; the app code reads the mirrored names internally.
  *
- * Used by frontend/package.json:
- *     "start": "node ../scripts/with-config-env.js react-scripts start"
- *     "build": "node ../scripts/with-config-env.js react-scripts build"
+ * Used by `scripts/dev.js`, i.e. `npm run dev` from the repo root — deliberately
+ * NOT by `frontend/package.json`, so the basic demo's own `npm start` stays a
+ * plain `react-scripts start` with no shim in the way.
+ *
+ * The consequence is worth knowing: starting the frontend directly
+ * (`cd frontend && npm start`) does NOT mirror the clean-named vars, so
+ * IND_CONFIGURATOR / ACC_PROJECT_ID / YOUR_BRAND_* in `frontend/.env` are not
+ * visible to the bundle. Only already-prefixed REACT_APP_* vars are. Use
+ * `npm run dev` from the root when you want those to take effect.
  */
 const { spawn } = require('child_process');
 const fs = require('fs');

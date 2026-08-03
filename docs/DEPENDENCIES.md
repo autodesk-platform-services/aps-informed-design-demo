@@ -54,6 +54,36 @@ nothing here changes behaviour.
 The `express` advisories (`body-parser`, `path-to-regexp`, `qs`) are transitive
 and already satisfied by the current `express@^4` resolution.
 
+## The react-scripts patch
+
+`frontend/patches/react-scripts+5.0.1.patch` is applied automatically by
+`patch-package` on `npm install` (via the frontend's `postinstall`).
+
+It changes one thing. `react-scripts` 5.0.1 still drives webpack-dev-server
+through the deprecated `onBeforeSetupMiddleware` / `onAfterSetupMiddleware`
+options, so every `npm start` opened with two warnings:
+
+```
+[DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: ...
+[DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE]  DeprecationWarning: ...
+```
+
+They looked like a transient error rather than permanent noise, because
+react-scripts clears the terminal once the compile succeeds and takes them with
+it. The patch replaces both hooks with the supported `setupMiddlewares`,
+preserving order exactly — what ran in the "before" hook is `unshift`ed so it
+still precedes the built-in middlewares, what ran in the "after" hook is
+`push`ed so it still follows them (including the proxy).
+
+Verified by running the dev server on the original and patched code and
+comparing: `/`, `/ws`, `/service-worker.js` and a proxied `/api/*` request behave
+identically. The only difference is two fewer warnings.
+
+There is no upstream fix to wait for — Create React App is unmaintained. If you
+migrate off CRA, delete the patch and the `postinstall` with it. If the patch
+ever fails to apply, `patch-package` warns but does **not** fail the install on
+purpose: you get the deprecation warnings back, nothing worse.
+
 ## Frontend: 25 remaining, and why
 
 `npm audit fix` takes the frontend from 49 to 25. What is left splits in two,
