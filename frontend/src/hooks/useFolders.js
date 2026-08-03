@@ -1,6 +1,46 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as folderService from '../services/folderService';
 
+/*
+ * Tree helpers live at module scope on purpose. They are pure functions of their
+ * arguments — they close over no state — and defining them inside the hook gave
+ * them a new identity on every render, which is what made the effects below
+ * either lie about their dependencies or risk re-running forever.
+ */
+
+/**
+ * Whether `folderId` exists anywhere in the tree.
+ */
+const findFolderInTree = (folder, folderId) => {
+  if (!folder) return false;
+  if (folder.id === folderId) return true;
+  if (folder.children) {
+    return folder.children.some((child) => findFolderInTree(child, folderId));
+  }
+  return false;
+};
+
+/**
+ * Add every ancestor of `targetId` to `expandedSet`, so a restored selection is
+ * visible rather than buried in a collapsed branch. Mutates `expandedSet`.
+ */
+const expandParentFolders = (folder, targetId, expandedSet) => {
+  if (!folder || !folder.children) return false;
+
+  for (const child of folder.children) {
+    if (child.id === targetId) {
+      expandedSet.add(folder.id);
+      return true;
+    }
+    const found = expandParentFolders(child, targetId, expandedSet);
+    if (found) {
+      expandedSet.add(folder.id);
+      return true;
+    }
+  }
+  return false;
+};
+
 /**
  * Custom hook for managing folder tree and selection.
  * Handles folder structure, selection, and expansion state.
@@ -121,39 +161,8 @@ export const useFolders = (selectedAccount, selectedProject) => {
       }
     }
     return null;
-  }, [folderTree]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [folderTree]);
 
-  /**
-   * Helper to find a folder in the tree by ID.
-   */
-  const findFolderInTree = (folder, folderId) => {
-    if (!folder) return false;
-    if (folder.id === folderId) return true;
-    if (folder.children) {
-      return folder.children.some(child => findFolderInTree(child, folderId));
-    }
-    return false;
-  };
-
-  /**
-   * Helper to expand parent folders recursively.
-   */
-  const expandParentFolders = (folder, targetId, expandedSet) => {
-    if (!folder || !folder.children) return false;
-
-    for (const child of folder.children) {
-      if (child.id === targetId) {
-        expandedSet.add(folder.id);
-        return true;
-      }
-      const found = expandParentFolders(child, targetId, expandedSet);
-      if (found) {
-        expandedSet.add(folder.id);
-        return true;
-      }
-    }
-    return false;
-  };
 
   // Auto-fetch folders when selectedProject changes
   useEffect(() => {
@@ -175,10 +184,15 @@ export const useFolders = (selectedAccount, selectedProject) => {
           // Restore folder selection
           setSelectedFolder(savedFolderId);
 
-          // Expand parent folders
-          const newExpanded = new Set(expandedFolders);
-          expandParentFolders(folderTree, savedFolderId, newExpanded);
-          setExpandedFolders(newExpanded);
+          // Expand parent folders. Updated from the previous value rather than
+          // from `expandedFolders` captured in scope, so this effect does not
+          // have to depend on the state it writes — which would re-run it on
+          // every expand.
+          setExpandedFolders((prev) => {
+            const newExpanded = new Set(prev);
+            expandParentFolders(folderTree, savedFolderId, newExpanded);
+            return newExpanded;
+          });
         } else {
           // Saved folder doesn't exist, clear it
           localStorage.removeItem('saved_folder_id');
@@ -188,7 +202,7 @@ export const useFolders = (selectedAccount, selectedProject) => {
         }
       }
     }
-  }, [folderTree, selectedProject, selectedFolder, expandedFolders]);
+  }, [folderTree, selectedProject, selectedFolder]);
 
   return {
     // State

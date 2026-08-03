@@ -552,21 +552,30 @@ function App() {
   const [showIdsDialog, setShowIdsDialog] = useState(false);
   const [showApsAppsDialog, setShowApsAppsDialog] = useState(false);
 
+  // Pulled out as plain identifiers so the dependency arrays below can name them.
+  // A `productUpdaters.updateProductState` member expression in a dep array is
+  // something the exhaustive-deps rule cannot track, so it asked for the whole
+  // `productUpdaters` / `productMethods` objects instead — which are rebuilt every
+  // render and would defeat the memoisation. Both functions are useCallback'd in
+  // useProducts, so depending on them directly is stable.
+  const { updateProductState } = productUpdaters;
+  const { selectProduct } = productMethods;
+
   // Wrapper for handleProjectChange that clears additional state
   const handleProjectChange = useCallback(async (projectId) => {
     setFolderTree(null);
     setSelectedFolder(null);
     setExpandedFolders(new Set());
-    productUpdaters.updateProductState({ list: [] });
-    productMethods.selectProduct(null);
-    productUpdaters.updateProductState({ expanded: null });
+    updateProductState({ list: [] });
+    selectProduct(null);
+    updateProductState({ expanded: null });
     setFileTree(null);
     setSelectedFile(null);
     setExpandedFiles(new Set());
     setSelectedElements(new Set()); // Clear element selection when changing projects
 
     await handleProjectChangeBase(projectId);
-  }, [handleProjectChangeBase, setFolderTree, setSelectedFolder, setExpandedFolders, productUpdaters.updateProductState, productMethods.selectProduct, setFileTree, setSelectedFile, setExpandedFiles, setSelectedElements]);
+  }, [handleProjectChangeBase, setFolderTree, setSelectedFolder, setExpandedFolders, updateProductState, selectProduct, setFileTree, setSelectedFile, setExpandedFiles, setSelectedElements]);
 
   // Wrapper for handleFolderSelect that clears element selection
   const handleFolderSelectWrapper = useCallback((folderId) => {
