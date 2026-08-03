@@ -1,5 +1,8 @@
 import React from 'react';
 import LanguageSelector from './LanguageSelector';
+import ModeToggle from '../configurator/ModeToggle';
+import { useConfiguratorMode, isStandalone, useConfigureFocus } from '../configurator/mode';
+import { CONFIGURATOR_CONFIG } from '../configurator/config';
 import UserMenu from './UserMenu';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -42,10 +45,67 @@ const NavigationBar = ({
 }) => {
   const { t } = useI18n();
 
+  const configuratorMode = useConfiguratorMode();
+  const showBranding = configuratorMode && !isStandalone();
+  // While the full-page configure view is open the bar becomes the configurator's
+  // own chrome: the account/project pickers give way to a breadcrumb for the
+  // product being configured, and the demo-only controls drop out so it reads
+  // like a customer's page rather than the Autodesk demo.
+  const { active: configuring, context: configureContext } = useConfigureFocus();
+  const { branding } = CONFIGURATOR_CONFIG;
+
   return (
     <nav className="menu-bar">
       <div className="menu-bar-content">
         <div className="menu-bar-left">
+          {showBranding ? (
+            /* Placeholder branding, so the embedded configurator looks like the
+               customer's app rather than the Autodesk demo. Same values the
+               standalone template uses (config.branding, driven by .env). */
+            <>
+              {branding.logoUrl ? (
+                <img src={branding.logoUrl} alt={branding.companyName} className="brand-logo-small" />
+              ) : (
+                <span className="brand-logo-badge">{(branding.companyName || '?').charAt(0)}</span>
+              )}
+              <span className="app-title">{branding.companyName}</span>
+              <span className="brand-sep">/</span>
+              {/* A real path rather than a bespoke back control. The header was
+                  already shaped like one; the middle crumb is the catalog and is
+                  a link whenever you're deeper than it. */}
+              {configuring ? (
+                <>
+                  <button
+                    type="button"
+                    className="brand-crumb-link"
+                    onClick={() => configureContext?.onBack && configureContext.onBack()}
+                  >
+                    Products
+                  </button>
+                  <span className="brand-sep">/</span>
+                  <span className="brand-crumb-current">{configureContext?.productName}</span>
+                  {/* Spelled out: this is the only place the release is shown,
+                      and a bare number beside a product name reads as a count or
+                      a version. Kept quiet by size and weight rather than by
+                      abbreviating it away. */}
+                  {configureContext?.releaseNumber != null && (
+                    <span
+                      className={`menu-bar-release${configureContext.isDefaultRelease ? ' is-default' : ''}`}
+                      title={configureContext.isDefaultRelease ? 'Default release' : undefined}
+                    >
+                      Release {configureContext.releaseNumber}
+                    </span>
+                  )}
+                </>
+              ) : (
+                /* In the gallery, Products IS the current page — same treatment
+                   the product name gets one level deeper. The last crumb always
+                   carries the weight. */
+                <span className="brand-crumb-current">Products</span>
+              )}
+            </>
+          ) : (
+            <>
           <div className="logo-small">
             <svg width="32" height="32" viewBox="0 0 965.0002 1024" xmlns="http://www.w3.org/2000/svg">
               <g>
@@ -64,9 +124,11 @@ const NavigationBar = ({
             </svg>
           </div>
           <span className="app-title">Informed Design Demo</span>
+            </>
+          )}
         </div>
         <div className="menu-bar-center">
-          {loadingAccounts ? (
+          {configuring ? null : loadingAccounts ? (
             <span style={{ fontSize: '0.85rem', color: '#666666' }}>{t('loading')}</span>
           ) : accAccounts.length > 0 ? (
             <div className="header-selectors">
@@ -114,13 +176,20 @@ const NavigationBar = ({
           ) : null}
         </div>
         <div className="menu-bar-right">
-          <LanguageSelector />
-          <UserMenu
-            userProfile={userProfile}
-            onLogout={handleLogout}
-            onShowToken={() => setShowTokenDialog(true)}
-            onShowIds={() => setShowIdsDialog(true)}
-          />
+          {/* Demo-only chrome. Hidden while configuring so the view reads as a
+              customer's own configurator; the breadcrumb is the way back. */}
+          {!configuring && (
+            <>
+              <ModeToggle />
+              <LanguageSelector />
+              <UserMenu
+                userProfile={userProfile}
+                onLogout={handleLogout}
+                onShowToken={() => setShowTokenDialog(true)}
+                onShowIds={() => setShowIdsDialog(true)}
+              />
+            </>
+          )}
         </div>
       </div>
     </nav>

@@ -189,6 +189,10 @@ const ProductsTab = ({
   deleteVariant,
   handleDownloadOutput,
   showNoProductsMessage,
+  // When provided, the configurator replaces the product cards. The folder panel
+  // above stays, so account/project (menu bar) + folder still drive selection --
+  // no need to hard-code ids in .env.
+  configuratorNode,
 }) => {
   const { t } = useI18n();
 
@@ -228,6 +232,9 @@ const ProductsTab = ({
                     );
                   })()}
                 </div>
+                {configuratorNode ? (
+                  <div className="products-panel">{configuratorNode}</div>
+                ) : (
                 <div className={`products-panel${expandedProductId != null ? ' products-panel--expanded' : ''}`}>
               <div className="products-header">
                 <h2 className="products-title">{t('products')}</h2>
@@ -1465,6 +1472,7 @@ const ProductsTab = ({
                 )
               ) : null}
             </div>
+                )}
                 </>
   );
 };

@@ -59,6 +59,29 @@
   flex-shrink: 0;
 }
 
+/* Release badge in the configure-view breadcrumb. */
+/* Metadata attached to the product name, so it has to stay quiet: a small
+   tinted pill reading "R2" rather than a spelled-out caption. The default
+   release is marked by tint alone — a star was one glyph too many in a line
+   that already has two separators. */
+.menu-bar-release {
+  flex: 0 0 auto;
+  align-self: center;
+  margin-left: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #eef1f5;
+  color: #6b7280;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.menu-bar-release.is-default {
+  background: rgba(227, 160, 8, 0.14);
+  color: #a16207;
+}
+
 .language-selector-container {
   position: relative;
 }
@@ -958,7 +981,7 @@
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  width: 320px;
+  width: 400px;
   flex-shrink: 0;
 }
 
@@ -981,7 +1004,7 @@
 
 .product-card-thumbnail {
   width: 100%;
-  height: 200px;
+  height: 260px;
   margin-bottom: 16px;
   border-radius: 6px;
   overflow: hidden;
@@ -999,7 +1022,7 @@
 
 .product-card-thumbnail-loading {
   width: 100%;
-  height: 200px;
+  height: 260px;
   margin-bottom: 16px;
   border-radius: 6px;
   background-color: #ffffff;
@@ -1228,13 +1251,25 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   margin-bottom: 6px;
+}
+
+/* A flex item defaults to min-width:auto, so it refuses to shrink below its
+   longest unbreakable run of text. Generated variant names are one long
+   underscore-joined token ("..._1200_1500_Opaque_Terracotta_Champagne"), which
+   offers no break opportunity — so without this the name set the row's floor
+   and pushed the delete and expand buttons outside the card. */
+.variant-info {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .variant-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .variant-delete-button {
@@ -1328,6 +1363,9 @@
 .variant-text {
   flex: 1;
   min-width: 0;
+  /* Underscore-joined names have no natural break opportunity; break inside the
+     token rather than letting it overflow the card. */
+  overflow-wrap: anywhere;
 }
 
 .variant-name {
@@ -1814,6 +1852,85 @@
 .constraint-inline {
   color: #0696d7;
   font-weight: 500;
+}
+
+/* Computed by the rules and not editable — recessed so the field itself says
+   so, without needing a badge. */
+.variant-form-input-readonly {
+  background: #F2F3F5;
+  color: #666666;
+  cursor: default;
+}
+
+.variant-form-unit {
+  font-weight: 400;
+  color: #666666;
+}
+
+/* Boolean toggle — the switch carries its own label to the right, so this row
+   has no .variant-form-label above it. */
+.variant-form-toggle-group {
+  margin: 2px 0 4px;
+}
+
+.variant-form-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+/* Visually hidden rather than display:none, so it stays focusable and screen
+   readers still announce the real checkbox state. */
+.variant-form-toggle-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.variant-form-toggle-track {
+  flex: 0 0 auto;
+  position: relative;
+  width: 40px;
+  height: 20px;
+  border-radius: 10px;
+  background: #C4C8CE;
+  transition: background 0.12s ease;
+}
+
+.variant-form-toggle-thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.12s ease;
+}
+
+.variant-form-toggle-input:checked + .variant-form-toggle-track {
+  background: #0696d7;
+}
+
+.variant-form-toggle-input:checked + .variant-form-toggle-track .variant-form-toggle-thumb {
+  transform: translateX(20px);
+}
+
+.variant-form-toggle-input:focus-visible + .variant-form-toggle-track {
+  box-shadow: 0 0 0 3px rgba(6, 150, 215, 0.3);
+}
+
+.variant-form-toggle-label {
+  font-size: 0.9rem;
+  color: #1A1A1A;
+  font-weight: 600;
 }
 
 @keyframes spin {

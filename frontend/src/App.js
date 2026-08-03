@@ -20,11 +20,16 @@ import {
   formatDate as formatDateUtil,
   translateStatus as translateStatusUtil,
   normalizeDbId,
+  generateVariantName,
+  sanitizeVariantName,
+  extractParameterRules,
 } from './utils/helpers';
 import { apiRequestJson } from './utils/apiClient';
 
 // Components
 import NavigationBar from './components/NavigationBar';
+import ConfiguratorApp from './configurator/ConfiguratorApp';
+import { useConfiguratorMode, isStandalone } from './configurator/mode';
 import TokenDialog from './components/TokenDialog';
 import IdsDialog from './components/IdsDialog';
 import ApsAppsDialog from './components/ApsAppsDialog';
@@ -35,6 +40,10 @@ import ProductsTab from './components/ProductsTab';
 import { useI18n } from './i18n/I18nContext';
 
 function App() {
+  // Reactive so toggling swaps the products panel in place. A reload here would
+  // remount useAuth and bounce the user to the login screen.
+  const configuratorMode = useConfiguratorMode();
+  const embedConfigurator = configuratorMode && !isStandalone();
   const { t, language } = useI18n();
 
   // Wrapper functions for utilities that need language or translation context
@@ -2247,18 +2256,10 @@ function App() {
     return Object.keys(constraints).length > 0 ? constraints : null;
   };
 
-  const generateVariantName = (product, formData, parameters) => {
-    const productName = product?.name || product?.productName || 'Product';
-    const parameterValues = parameters.map(param => {
-      const key = param.key || param.name;
-      const value = formData[key];
-      return value !== undefined && value !== null && value !== '' ? String(value) : (param.defaultValue !== undefined ? String(param.defaultValue) : '');
-    }).filter(val => val !== '');
-    
-    return parameterValues.length > 0 
-      ? `${productName}_${parameterValues.join('_')}`
-      : productName;
-  };
+  // NB: no local generateVariantName. There used to be one here that neither
+  // sanitized the name nor skipped read-only parameters, while CreateVariantForm
+  // used the shared helper — so the name shown in the form and the name actually
+  // submitted could differ. One implementation, in utils/helpers.
 
   const handleCreateVariantClick = async (releaseId) => {
     // Mark as loading inputs
@@ -2352,16 +2353,34 @@ function App() {
       }
 
       const formData = formState.dataByRelease[releaseId] || {};
-      const parameters = releaseState.inputs[releaseId] || [];
-      const variantInputs = parameters.map(param => {
-        const name = param.name || param.key;
-        const value = formData[param.key || param.name];
-        return {
-          name: name,
-          value: value !== undefined && value !== null && value !== '' ? value : param.defaultValue
-        };
+      const rawParameters = releaseState.inputs[releaseId] || [];
+
+      // Read-only parameters are computed by the rules (Family_Type_Name is
+      // derived from Width and Height), so they are not ours to send — the
+      // value we hold is only ever a stale copy of what the rules recompute.
+      const rulesCode = releaseState.validationCode[releaseId];
+      const paramRules = extractParameterRules(typeof rulesCode === 'string' ? rulesCode : '');
+      const parameters = rawParameters.map(param => {
+        const rules = paramRules[param.name || param.key];
+        return rules ? { ...param, rules, readOnly: Boolean(rules.readOnly) } : param;
       });
-      const variantName = formData._variantName || generateVariantName(product, formData, parameters);
+
+      const variantInputs = parameters
+        .filter(param => !param.readOnly)
+        .map(param => {
+          const name = param.name || param.key;
+          const value = formData[param.key || param.name];
+          return {
+            name: name,
+            value: value !== undefined && value !== null && value !== '' ? value : param.defaultValue
+          };
+        });
+      // Sanitized at the boundary, not just in the generator: a name typed by
+      // hand comes through here too, and the API 400s on characters like `"`,
+      // which Inventor text values carry.
+      const variantName = sanitizeVariantName(
+        formData._variantName || generateVariantName(product, formData, parameters)
+      );
 
       const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
       const response = await fetch(
@@ -6255,7 +6274,10 @@ function App() {
           </div>
         ) : (
           <div className="main-content">
-            <div className="content-layout-with-tabs">
+            <div className={`content-layout-with-tabs${embedConfigurator ? ' content-layout-configurator' : ''}`}>
+              {/* Products / Projects / Data Exchanges are demo-app concerns; the
+                  configurator only deals with products, so hide them. */}
+              {!embedConfigurator && (
               <div className="vertical-tabs">
                 <button
                   className={`tab-button ${activeTab === 'products' ? 'active' : ''}`}
@@ -6276,8 +6298,18 @@ function App() {
                   {t('dataExchange')}
                 </button>
               </div>
+              )}
               {activeTab === 'products' ? (
                 <ProductsTab
+                  configuratorNode={
+                    embedConfigurator ? (
+                      <ConfiguratorApp
+                        embedded
+                        projectId={selectedProject}
+                        folderUrn={selectedFolder}
+                      />
+                    ) : null
+                  }
                     // Folder-related props
                     folderTree={folderTree}
                   selectedFolder={selectedFolder}

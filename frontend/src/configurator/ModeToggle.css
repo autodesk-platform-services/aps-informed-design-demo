@@ -1,0 +1,98 @@
+/* Dev-only app switcher. Deliberately plain so it reads as tooling, not product.
+   Its own stylesheet because it renders inside two different apps' menu bars. */
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid #d0d5db;
+  border-radius: 6px;
+  background: #f3f4f6;
+  flex: 0 0 auto;
+}
+
+.mode-toggle-btn {
+  border: none;
+  background: none;
+  padding: 4px 9px;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #4b5563;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mode-toggle-btn:hover:not(:disabled) { background: #e5e7eb; }
+
+/* The active side is the one you're looking at, so it's also the disabled one --
+   override the usual dimming or the current app would look unavailable. */
+.mode-toggle-btn.is-active,
+.mode-toggle-btn:disabled {
+  background: #fff;
+  color: #111827;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  cursor: default;
+  opacity: 1;
+}
+
+/* Placeholder branding shown in the demo app's menu bar while the embedded
+   configurator is active (see NavigationBar.js). */
+.brand-logo-small { height: 26px; width: auto; display: block; }
+.brand-logo-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 6px;
+  background: var(--brand-primary, #0696d7); color: #fff; font-weight: 700; font-size: 13px;
+}
+.brand-sep { color: #b0b6bd; margin: 0 2px; }
+.brand-subtitle { color: #6b7280; }
+
+/* Breadcrumb crumbs. The header was already a path ("Company / Section"), so the
+   configure view extends it rather than adding a separate back control:
+   Company / Products / <product>. The middle crumb is the way back. */
+/* A link, not a control — no padding or hover fill, which made it read as a
+   button parked in the header. Colour carries the affordance: this is the only
+   coloured item in the trail, which is the conventional way a breadcrumb says
+   "this one is clickable" without dressing it up as a button. */
+.brand-crumb-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--brand-primary, #0696d7);
+  /* Matches .app-title (the company name) so the trail reads as one line of
+     type — only the colour separates the link from the rest. */
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: inherit;
+  cursor: pointer;
+  transition: color 0.12s ease;
+}
+.brand-crumb-link:hover {
+  color: #0579ac;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.brand-crumb-link:focus-visible {
+  outline: 2px solid var(--brand-primary, #0696d7);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+/* The subject of the page. Everything to its left is a path to get here, so it
+   is the one crumb that is neither a link nor muted — larger and heavier than
+   the trail, which is what makes it read as the focus rather than as more
+   header text. */
+.brand-crumb-current {
+  color: #1a1a1a;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  max-width: 42vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* No vertical tabs in configurator mode, so reclaim their column. */
+.content-layout-configurator .vertical-tabs { display: none; }

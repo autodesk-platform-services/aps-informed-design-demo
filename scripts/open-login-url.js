@@ -45,7 +45,7 @@ async function main() {
   const { execSync } = require('child_process');
   const open = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open';
   execSync(`${open} "${loginUrl}"`, { stdio: 'inherit' });
-  console.log('Opened login URL in browser. After signing in, the token will be saved for the MCP server.');
+  console.log('Opened login URL in browser. After signing in, the backend callback exchanges the code for a token.');
 }
 
 main();
