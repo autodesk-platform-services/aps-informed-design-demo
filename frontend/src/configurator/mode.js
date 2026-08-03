@@ -18,7 +18,9 @@ import { useEffect, useState } from 'react';
  * lands back on `/` with no query string — without persistence, signing in would
  * bounce you to whatever `.env` says.
  *
- * Precedence: URL param > remembered choice > .env.
+ * Precedence: URL param > remembered choice > .env — but a remembered choice is
+ * only honoured while `.env` still says what it said when the choice was made.
+ * Change IND_CONFIGURATOR and your edit wins; see `storedChoice`.
  */
 const STORAGE_KEY = 'ind_configurator_mode';
 const PARAM = 'configurator';
@@ -37,6 +39,66 @@ const isReset = (value) =>
   ['', 'auto', 'default', 'reset', 'unset'].includes(String(value ?? '').trim().toLowerCase());
 
 const envDefault = () => process.env.REACT_APP_IND_CONFIGURATOR === 'true';
+
+/**
+ * Read the remembered choice.
+ *
+ * Stored with the `.env` value it was made against, because a remembered click
+ * used to outrank `.env` *forever*: set IND_CONFIGURATOR=true, restart, and you
+ * still got whatever you last clicked, with nothing on screen to explain why.
+ * Editing `.env` is a deliberate act and should win, so when the stored
+ * `envDefault` no longer matches the current one the override is stale and gets
+ * dropped. Within one `.env` setting the click still sticks — which is the whole
+ * point, since the OAuth callback returns to `/` with no query string.
+ *
+ * Older builds stored a bare "true"/"false" with no record of the `.env` it was
+ * made against. Such a value is DISCARDED rather than honoured: it is the exact
+ * value causing the bug, and keeping it would mean anyone who had already
+ * clicked the toggle never sees the fix. They lose one remembered click; the
+ * next one is stored properly.
+ *
+ * @returns {boolean|null} the remembered choice, or null if there isn't a live one.
+ */
+const storedChoice = () => {
+  let raw;
+  try {
+    raw = localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null; // storage unavailable (private mode)
+  }
+  if (raw === null) return null;
+
+  if (parseBool(raw) !== null) {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* nothing more we can do */
+    }
+    return null;
+  }
+
+  try {
+    const { choice, envDefault: envWhenChosen } = JSON.parse(raw);
+    if (typeof choice !== 'boolean') return null;
+    // `.env` changed since this choice was made — it no longer applies.
+    if (envWhenChosen !== envDefault()) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return choice;
+  } catch {
+    return null; // unparseable — treat as absent
+  }
+};
+
+/** Persist a choice together with the `.env` default it was made against. */
+const rememberChoice = (choice) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ choice, envDefault: envDefault() }));
+  } catch {
+    /* storage unavailable — in-memory listeners still update the UI */
+  }
+};
 
 /**
  * True when the configurator should render as the standalone customer template
@@ -68,7 +130,7 @@ export function shouldUseConfigurator() {
       } else {
         const parsed = parseBool(raw);
         if (parsed !== null) {
-          localStorage.setItem(STORAGE_KEY, String(parsed));
+          rememberChoice(parsed);
           return parsed;
         }
       }
@@ -77,13 +139,9 @@ export function shouldUseConfigurator() {
     // Malformed URL or storage unavailable — fall through to the next source.
   }
 
-  // 2. Previously remembered choice.
-  try {
-    const stored = parseBool(localStorage.getItem(STORAGE_KEY));
-    if (stored !== null) return stored;
-  } catch {
-    // Storage unavailable (private mode) — fall through to .env.
-  }
+  // 2. Previously remembered choice, unless .env has changed since.
+  const stored = storedChoice();
+  if (stored !== null) return stored;
 
   // 3. Build-time default from .env.
   return envDefault();
@@ -115,11 +173,7 @@ const announce = () => {
  * @param {boolean} useConfigurator
  */
 export function setConfiguratorMode(useConfigurator) {
-  try {
-    localStorage.setItem(STORAGE_KEY, String(Boolean(useConfigurator)));
-  } catch {
-    /* storage unavailable — the in-memory listeners below still update the UI */
-  }
+  rememberChoice(Boolean(useConfigurator));
   announce();
 }
 

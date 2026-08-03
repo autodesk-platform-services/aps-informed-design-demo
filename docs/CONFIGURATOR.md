@@ -47,6 +47,26 @@ Same code path either way.
 | Where it gets the folder | whatever you selected in the demo app | `frontend/.env` |
 | Good for | trying it against your own products in seconds | seeing the shippable shape |
 
+**A development run is always embedded**, even with `IND_CONFIGURATOR=true`. That
+is deliberate — it lets the demo app's pickers drive the configurator — but it
+means a dev run **ignores `ACC_PROJECT_ID` / `ACC_FOLDER_URN`** and waits for you
+to pick an account, project and folder in the header instead. If you set those
+two vars and nothing seemed to use them, that is why. To get the real standalone
+view in development, add `?standalone=1`:
+
+```
+localhost:3000?standalone=1
+```
+
+Production builds (`npm run build`) are always standalone and always read `.env`.
+
+**Which app renders** is decided by, in order: `?configurator=1` / `?configurator=0`
+in the URL, then your last click on the **Demo App / Demo Configurator** toggle,
+then `IND_CONFIGURATOR` from `.env`. The remembered click is scoped to the `.env`
+value it was made against, so **editing `IND_CONFIGURATOR` always wins** — it
+used to be outranked by a months-old toggle click with nothing to explain why.
+`?configurator=auto` clears the remembered choice outright.
+
 ## Pointing it at your data
 
 Only needed for **standalone** — embedded uses the demo app's selection.
