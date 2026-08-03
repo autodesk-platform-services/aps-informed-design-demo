@@ -17,7 +17,9 @@ Which one loads is that single setting in `frontend/.env`, and in development yo
 
 ## Quickstart
 
-**Prerequisites:** Node.js 16+, npm 7+, an APS app, and an ACC project containing Informed Design products.
+**Prerequisites:** Node.js **20.19+** (22 LTS is a good choice), npm 7+, an APS app, and an ACC project containing Informed Design products.
+
+> Older Node runs the web app fine but cannot package the desktop build — `electron-builder` 26 needs 20.19+. See [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md).
 
 ```bash
 git clone <this-repo> && cd ind-demo
@@ -116,6 +118,7 @@ This repo uses **3-legged OAuth only** — every user signs in with their own Au
 | [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) | 3LO today, the SSA path, and the ACC prerequisite |
 | [docs/BUILD_GUIDE.md](docs/BUILD_GUIDE.md) | how the demo app is put together, feature by feature |
 | [docs/ELECTRON_BUILD_GUIDE.md](docs/ELECTRON_BUILD_GUIDE.md) | packaging as a desktop app |
+| [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md) | the required Node version, and what `npm audit` reports and why |
 
 ## Licence and support
 
