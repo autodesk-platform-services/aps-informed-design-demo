@@ -6,7 +6,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { getUserInfo } from '../services/authService';
 import { useI18n } from '../i18n/I18nContext';
 
-const UserMenu = ({ userProfile, onLogout, onShowToken, onShowIds }) => {
+const UserMenu = ({ userProfile, profileError, onLogout, onShowToken, onShowIds }) => {
   const { t } = useI18n();
   const [showDropdown, setShowDropdown] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
@@ -50,20 +50,42 @@ const UserMenu = ({ userProfile, onLogout, onShowToken, onShowIds }) => {
     };
   }, [showDropdown]);
 
-  // Get user name - try profile first, then userInfo from token
-  const userName = userProfile?.name || userProfile?.userName || userProfile?.email
-    || userInfo?.email || userInfo?.name 
+  /**
+   * A human name for the signed-in user, best source first.
+   *
+   * Profile API v2 names its fields differently from the retired v1 (`firstName`
+   * /`lastName`, `emailId`, `preferredUsername` — not `userName`/`email`), so
+   * both spellings are accepted here; a v1-shaped response still works.
+   *
+   * The last resorts used to include the bare `userid` claim, which is how this
+   * rendered as a 15-digit Autodesk oxygen id ("115925142068816") instead of a
+   * name. A raw numeric id is not a name, so it is no longer offered — an
+   * address or the generic label is more use than an internal identifier.
+   */
+  const fullName = [userProfile?.firstName || userProfile?.givenName, userProfile?.lastName || userProfile?.familyName]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+
+  const userName = userProfile?.name
+    || fullName
+    || userProfile?.userName || userProfile?.preferredUsername
+    || userProfile?.emailId || userProfile?.email
+    || userInfo?.name || userInfo?.email
     || (userInfo?.userid && userInfo.userid.includes('@') ? userInfo.userid : null)
     || (userInfo?.sub && userInfo.sub.includes('@') ? userInfo.sub : null)
-    || userInfo?.userid
     || t('user');
+
+  // Fell back to the generic label, so say why on hover instead of leaving the
+  // reason in the console.
+  const isFallbackName = userName === t('user');
 
   return (
     <div className="user-menu-container" ref={menuRef}>
-      <button 
+      <button
         className="user-profile-button"
         onClick={() => setShowDropdown(!showDropdown)}
-        title={userName}
+        title={isFallbackName && profileError ? `${userName} — ${profileError}` : userName}
       >
         <span className="user-name">
           {userName}

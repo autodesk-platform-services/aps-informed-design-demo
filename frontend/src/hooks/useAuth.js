@@ -12,6 +12,9 @@ export const useAuth = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // Kept apart from `error`: a missing display name must not present itself as
+  // a failed sign-in. Surfaced for diagnosis rather than swallowed.
+  const [profileError, setProfileError] = useState(null);
   const [apsAppName, setApsAppName] = useState(null);
   const [apsClientId, setApsClientId] = useState(null);
   const [customApsCredentials, setCustomApsCredentials] = useState(() => {
@@ -53,15 +56,41 @@ export const useAuth = () => {
 
     const profile = await authService.fetchUserProfile(accessToken);
     setUserProfile(profile);
+    setProfileError(null);
     setIsAuthenticated(true);
   };
 
+  /**
+   * Restore a session from a stored token.
+   *
+   * The profile call is how we check the token is still good, but "the profile
+   * endpoint said no" and "this token is dead" are NOT the same thing, and
+   * treating them as one caused three separate bugs. When the profile request
+   * failed for any reason this used to delete the stored token, so a profile
+   * outage silently pulled the token out from under everything else that reads
+   * it: the ACC projects list quietly went empty, and the configurator sat on
+   * "Loading products…" forever because its effect bails out when the token is
+   * missing and leaves `products` at its not-loaded value.
+   *
+   * So only a genuine auth rejection (401, after apiClient has already tried a
+   * refresh) clears the session. Anything else leaves the token alone and just
+   * means we render without a display name.
+   */
   const verifyTokenAndGetProfile = async (token) => {
     try {
       await fetchUserProfile(token);
     } catch (err) {
-      localStorage.removeItem('aps_access_token');
-      localStorage.removeItem('aps_refresh_token');
+      if (err?.status === 401 || err?.requiresLogin) {
+        localStorage.removeItem('aps_access_token');
+        localStorage.removeItem('aps_refresh_token');
+        localStorage.removeItem('aps_token_expires_at');
+        setIsAuthenticated(false);
+        return;
+      }
+
+      // The token is fine — we just have no profile to show. Stay signed in.
+      setIsAuthenticated(true);
+      setProfileError(err?.message || 'Failed to load user profile');
     }
   };
 
@@ -89,8 +118,10 @@ export const useAuth = () => {
 
       try {
         await fetchUserProfile(data.access_token);
-      } catch (profileError) {
-        // Silent fail - allow login to succeed even without profile
+      } catch (err) {
+        // Sign-in still succeeded; we just have no display name. Recorded
+        // rather than swallowed so the reason is visible somewhere.
+        setProfileError(err?.message || 'Failed to load user profile');
       }
     } catch (err) {
       localStorage.removeItem('aps_access_token');
@@ -301,6 +332,7 @@ export const useAuth = () => {
     localStorage.removeItem('saved_product_id');
     setIsAuthenticated(false);
     setUserProfile(null);
+    setProfileError(null);
 
     window.location.href = 'https://accounts.autodesk.com/Authentication/LogOut';
   };
@@ -308,6 +340,7 @@ export const useAuth = () => {
   return {
     isAuthenticated,
     userProfile,
+    profileError,
     loading,
     error,
     apsAppName,

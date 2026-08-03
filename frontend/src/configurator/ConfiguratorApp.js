@@ -204,7 +204,19 @@ export default function ConfiguratorApp({ embedded = false, projectId, folderUrn
     setCardRelease({});
     setProductsError(null);
 
-    if ((!embedded && !isAuthenticated) || !token || !hasAccess) return undefined;
+    if ((!embedded && !isAuthenticated) || !hasAccess) return undefined;
+
+    // Bail out LOUDLY when there's no token. Returning quietly here leaves
+    // `products` at null, and null is the not-loaded state that renders
+    // "Loading products…" — so a missing token used to look like a fetch that
+    // never finished, with nothing on screen or in the console to say why.
+    // (The token used to disappear on its own: a failed profile call deleted
+    // it. That is fixed in useAuth, but the state still has to be honest.)
+    if (!token) {
+      setProductsError('Not signed in, or the session expired. Sign in again to load products.');
+      return undefined;
+    }
+
     let cancelled = false;
     loadProducts(token, access)
       .then((ps) => {

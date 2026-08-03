@@ -2992,6 +2992,14 @@
   box-shadow: 0 0 0 2px rgba(6, 150, 215, 0.1);
 }
 
+/* A list that failed to load, as opposed to one that is genuinely empty.
+   Hover for the reason. */
+.header-dropdown-error,
+.header-dropdown-error:disabled {
+  border-color: #d9534f;
+  color: #b3413d;
+}
+
 /* Selectors Container */
 .selectors-container {
   display: flex;

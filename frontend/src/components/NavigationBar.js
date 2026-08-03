@@ -21,10 +21,12 @@ import { useI18n } from '../i18n/I18nContext';
  * @param {string} props.selectedAccount - Currently selected account ID
  * @param {Function} props.handleAccountChange - Account selection handler
  * @param {boolean} props.loadingProjects - Loading state for projects
+ * @param {string} props.projectsError - Why the project list failed to load, if it did
  * @param {Array} props.accProjects - List of projects for selected account
  * @param {string} props.selectedProject - Currently selected project ID
  * @param {Function} props.handleProjectChange - Project selection handler
  * @param {Object} props.userProfile - User profile information
+ * @param {string} props.profileError - Why the profile failed to load, if it did
  * @param {Function} props.handleLogout - Logout handler
  * @param {Function} props.setShowTokenDialog - Show token dialog handler
  * @param {Function} props.setShowIdsDialog - Show IDs dialog handler
@@ -35,10 +37,12 @@ const NavigationBar = ({
   selectedAccount,
   handleAccountChange,
   loadingProjects,
+  projectsError,
   accProjects,
   selectedProject,
   handleProjectChange,
   userProfile,
+  profileError,
   handleLogout,
   setShowTokenDialog,
   setShowIdsDialog,
@@ -167,8 +171,19 @@ const NavigationBar = ({
                     ))}
                   </select>
                 ) : (
-                  <select className="header-dropdown" disabled>
-                    <option>{selectedAccount ? t('noProjects') : t('selectAccountFirst')}</option>
+                  // A failed request and a hub with genuinely no projects both
+                  // used to render as "No projects". They read differently now,
+                  // and the reason is in the tooltip.
+                  <select
+                    className={projectsError ? 'header-dropdown header-dropdown-error' : 'header-dropdown'}
+                    title={projectsError || undefined}
+                    disabled
+                  >
+                    <option>
+                      {projectsError
+                        ? t('projectsFailed')
+                        : selectedAccount ? t('noProjects') : t('selectAccountFirst')}
+                    </option>
                   </select>
                 )}
               </div>
@@ -184,6 +199,7 @@ const NavigationBar = ({
               <LanguageSelector />
               <UserMenu
                 userProfile={userProfile}
+                profileError={profileError}
                 onLogout={handleLogout}
                 onShowToken={() => setShowTokenDialog(true)}
                 onShowIds={() => setShowIdsDialog(true)}

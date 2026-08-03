@@ -60,6 +60,7 @@ function App() {
   const {
     isAuthenticated,
     userProfile,
+    profileError,
     loading,
     error,
     handleLogin,
@@ -76,6 +77,7 @@ function App() {
     accProjects,
     selectedProject,
     loadingProjects,
+    projectsError,
     handleAccountChange,
     handleProjectChange: handleProjectChangeBase,
   } = accountsProjects;
@@ -5577,10 +5579,12 @@ function App() {
           selectedAccount={selectedAccount}
           handleAccountChange={handleAccountChange}
           loadingProjects={loadingProjects}
+          projectsError={projectsError}
           accProjects={accProjects}
           selectedProject={selectedProject}
           handleProjectChange={handleProjectChange}
           userProfile={userProfile}
+          profileError={profileError}
           handleLogout={handleLogout}
           setShowTokenDialog={setShowTokenDialog}
           setShowIdsDialog={setShowIdsDialog}
