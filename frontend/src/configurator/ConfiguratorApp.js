@@ -90,6 +90,16 @@ function Header({ onLogout, showLogout, showModeToggle = true }) {
 }
 
 /**
+ * Do two access descriptors point at the same project + folder?
+ *
+ * Module scope on purpose: it is used inside an effect, and defining it in the
+ * component body would give it a new identity every render and force it into
+ * that effect's dependency array.
+ */
+const sameAccess = (a, b) =>
+  a === b || (!!a && !!b && a.projectId === b.projectId && a.folderUrn === b.folderUrn);
+
+/**
  * @param {object} props
  * @param {boolean} [props.embedded] - rendered inside the demo app, which already
  *   provides the menu bar, auth and the project/folder pickers. Hides this
@@ -112,6 +122,10 @@ export default function ConfiguratorApp({ embedded = false, projectId, folderUrn
   const [entryId, setEntryId] = useState(0);
 
   const [products, setProducts] = useState(null); // null = not loaded
+  // Which folder the products in state actually came from. Set together with
+  // `products`, and checked before anything fetches per-product data — see the
+  // thumbnail effect for why the two must be kept in step.
+  const [productsAccess, setProductsAccess] = useState(null);
   const [productsError, setProductsError] = useState(null);
   const [thumbs, setThumbs] = useState({});
   const [cardRelease, setCardRelease] = useState({}); // productId -> releaseId (gallery selection)
@@ -200,6 +214,7 @@ export default function ConfiguratorApp({ embedded = false, projectId, folderUrn
     // they were this one's — briefly, but long enough to click one. null is the
     // not-loaded state, so this renders "Loading products…" instead.
     setProducts(null);
+    setProductsAccess(null);
     setThumbs({});
     setCardRelease({});
     setProductsError(null);
@@ -221,7 +236,9 @@ export default function ConfiguratorApp({ embedded = false, projectId, folderUrn
     loadProducts(token, access)
       .then((ps) => {
         if (cancelled) return;
+        // Set together and never apart: these two are a pair.
         setProducts(ps);
+        setProductsAccess(access);
         const cr = {};
         ps.forEach((p) => {
           const rels = p.releases || [];
@@ -236,6 +253,16 @@ export default function ConfiguratorApp({ embedded = false, projectId, folderUrn
   // 2. Fetch thumbnails (blob object URLs) once products are known.
   useEffect(() => {
     if (!products || !token) return;
+
+    // Only fetch when the products in state actually belong to the current
+    // folder. Changing folder updates `access` first; on that commit `products`
+    // still holds the PREVIOUS folder's list, because the effect above has only
+    // just queued `setProducts(null)`. Without this guard, every visible card
+    // asked for its thumbnail under the new folder's accessId — products that do
+    // not exist there — and the API answered 404 for each one. Harmless-looking
+    // (the URLs are discarded) but it filled the console with red on every
+    // folder change and made a real 404 impossible to spot.
+    if (!sameAccess(productsAccess, access)) return;
     let cancelled = false;
     const created = [];
     (async () => {
@@ -249,7 +276,7 @@ export default function ConfiguratorApp({ embedded = false, projectId, folderUrn
       if (!cancelled) setThumbs(Object.fromEntries(entries.filter(([, u]) => u)));
     })();
     return () => { cancelled = true; created.forEach((u) => URL.revokeObjectURL(u)); };
-  }, [products, token, access]);
+  }, [products, productsAccess, token, access]);
 
   // 3. When a release is chosen for configuring, load its inputs and seed the form.
   useEffect(() => {
