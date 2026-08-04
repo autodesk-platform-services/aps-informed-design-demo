@@ -79,6 +79,11 @@ router.post('/', requireAuth, async (req, res) => {
         errorMessage = errorText || errorMessage;
       }
       
+      // Logged like variant creation: the upstream body is the only thing that
+      // says WHICH output setting was rejected.
+      console.error(`[Outputs] create failed (${response.status}):`, errorText);
+      console.error('[Outputs] request body was:', JSON.stringify(requestBody));
+
       return res.status(response.status).json({ error: errorMessage, details: errorDetails });
     }
     

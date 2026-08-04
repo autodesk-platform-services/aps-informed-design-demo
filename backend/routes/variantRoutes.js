@@ -184,15 +184,23 @@ router.post('/', requireAuth, async (req, res) => {
     
     if (!response.ok) {
       const errorText = await response.text();
-      
+
       let errorMessage = 'Failed to create variant';
+      let errorDetails = null;
       try {
         const errorData = JSON.parse(errorText);
-        errorMessage = errorData.developerMessage || errorData.error || errorData.message || errorMessage;
+        // `title` and `Detail` are what Informed Design actually returns; without
+        // them this fell through to the generic message above and the real reason
+        // was discarded, leaving the UI saying only "Failed to create variant".
+        errorMessage = errorData.developerMessage || errorData.error || errorData.message || errorData.title || errorMessage;
+        errorDetails = errorData;
       } catch (parseError) {
         errorMessage = errorText || errorMessage;
       }
-      return res.status(response.status).json({ error: errorMessage });
+
+      console.error(`[Variants] create failed (${response.status}):`, errorText);
+      console.error('[Variants] request body was:', JSON.stringify(requestBody));
+      return res.status(response.status).json({ error: errorMessage, details: errorDetails });
     }
     
     const data = await response.json();

@@ -287,7 +287,7 @@ router.get('/user-info', requireAuth, async (req, res) => {
   }
 });
 
-// User Profile endpoint - proxies request to APS Profile API v2
+// User Profile endpoint - proxies the APS OIDC UserInfo endpoint
 router.get('/user-profile', requireAuth, async (req, res) => {
   const accessToken = req.accessToken;
   
@@ -296,16 +296,22 @@ router.get('/user-profile', requireAuth, async (req, res) => {
   }
   
   try {
-    // Use v2 endpoint - requires user-profile:read scope
-    // v2 returns profileImages object with size keys (xsmall, small, medium, large)
-    const profileUrl = 'https://api.userprofile.autodesk.com/userprofile/v2/users/@me';
-    
+    // The OIDC UserInfo endpoint. Requires the `user-profile:read` scope and
+    // returns snake_case claims: sub, name, given_name, family_name,
+    // preferred_username, email, email_verified, picture, locale.
+    //
+    // This used to point at `/userprofile/v2/users/@me`, which does not exist —
+    // it answers a bare nginx `403 Forbidden` (text/html), with none of the JSON
+    // error body a real APS endpoint returns. That is easy to misread as a
+    // permissions or scope problem, so if you see an HTML 403 from any APS host,
+    // suspect the path before the token. `/userinfo` answers 401 for a bad
+    // token, which is how you can tell it is a real route.
+    const profileUrl = 'https://api.userprofile.autodesk.com/userinfo';
+
     const response = await fetch(profileUrl, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'x-ads-region': 'US',
       },
     });
     
