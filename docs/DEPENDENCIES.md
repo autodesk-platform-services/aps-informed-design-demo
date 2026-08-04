@@ -84,6 +84,19 @@ migrate off CRA, delete the patch and the `postinstall` with it. If the patch
 ever fails to apply, `patch-package` warns but does **not** fail the install on
 purpose: you get the deprecation warnings back, nothing worse.
 
+## One warning that is not ours
+
+The packaged desktop app prints this once from its backend process:
+
+```
+[Backend stderr] (node:NNNNN) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
+```
+
+It comes from Electron's own asar `fs` patch, not from this repo — nothing here
+constructs `fs.Stats`, and the warning does not appear when the same backend runs
+outside the `.app`. It also needs Node 22, which is what Electron 43 embeds. There
+is nothing to fix on this side; it will go when Electron updates that patch.
+
 ## Frontend: 25 remaining, and why
 
 `npm audit fix` takes the frontend from 49 to 25. What is left splits in two,
