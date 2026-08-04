@@ -22,8 +22,9 @@ const frontendDir = path.join(root, 'frontend');
 const envFile = '.env';
 
 // The frontend runs THROUGH the env shim (with-config-env.js) so the
-// configurator's clean-named vars are mirrored to REACT_APP_* — this keeps the
-// shim entirely out of the basic demo's own `npm start`, which is untouched.
+// configurator's clean-named vars are mirrored to REACT_APP_*. Invoked directly
+// rather than via `npm start`, which now applies the shim itself — going through
+// the npm script would just run it twice.
 const BACKEND = { name: 'backend', color: '\x1b[36m', cmd: npm, cwd: path.join(root, 'backend'), args: ['run', 'dev'] };
 const FRONTEND = {
   name: 'frontend',

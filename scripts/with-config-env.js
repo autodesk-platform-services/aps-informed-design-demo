@@ -8,15 +8,21 @@
  * mirrors every var to a REACT_APP_<NAME> copy so CRA picks it up. You never
  * write the prefix; the app code reads the mirrored names internally.
  *
- * Used by `scripts/dev.js`, i.e. `npm run dev` from the repo root — deliberately
- * NOT by `frontend/package.json`, so the basic demo's own `npm start` stays a
- * plain `react-scripts start` with no shim in the way.
+ * Every entry point goes through it, so `frontend/.env` behaves the same however
+ * you start:
+ *   - `npm run dev` from the root (via `scripts/dev.js`)
+ *   - `cd frontend && npm start`
+ *   - `cd frontend && npm run build`, and therefore the packaged Electron app
  *
- * The consequence is worth knowing: starting the frontend directly
- * (`cd frontend && npm start`) does NOT mirror the clean-named vars, so
- * IND_CONFIGURATOR / ACC_PROJECT_ID / YOUR_BRAND_* in `frontend/.env` are not
- * visible to the bundle. Only already-prefixed REACT_APP_* vars are. Use
- * `npm run dev` from the root when you want those to take effect.
+ * That uniformity is the point. `start` and `build` used to be plain
+ * `react-scripts` calls, which meant IND_CONFIGURATOR, ACC_PROJECT_ID,
+ * ACC_FOLDER_URN and every YOUR_BRAND_* were invisible unless you happened to use
+ * `npm run dev` — a documented setting silently doing nothing, depending only on
+ * which command you typed. For the packaged app there was no working command at
+ * all, so it could never be pointed at a folder or rebranded.
+ *
+ * `scripts/dev.js` invokes this shim directly rather than through
+ * `frontend`'s npm script, so `npm run dev` does not run it twice.
  */
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -25,8 +31,14 @@ const path = require('path');
 const frontendDir = path.resolve(__dirname, '..', 'frontend');
 const env = { ...process.env };
 
-// Read .env then .env.local (local overrides), mirroring each var to REACT_APP_*.
-for (const file of ['.env', '.env.local']) {
+// Mirror each var to REACT_APP_*. Highest precedence first, because the loop below
+// only fills in what is still unset: the real environment (already in `env`) beats
+// both files, `.env.local` beats `.env`. That order matches Create React App.
+//
+// The files used to be read `.env` first, which — with a fill-in-if-unset rule —
+// silently meant `.env` won and `.env.local` was ignored for any key both defined.
+// The comment here claimed the opposite.
+for (const file of ['.env.local', '.env']) {
   const p = path.join(frontendDir, file);
   if (!fs.existsSync(p)) continue;
   for (const line of fs.readFileSync(p, 'utf8').split('\n')) {

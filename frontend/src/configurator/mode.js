@@ -104,12 +104,25 @@ const rememberChoice = (choice) => {
  * True when the configurator should render as the standalone customer template
  * (its own header, ids from .env, no pickers) rather than embedded in the demo app.
  *
- * Production builds are always standalone. In development it renders embedded so
- * the demo app's account/project/folder pickers can drive it -- `?standalone=1`
- * forces the true customer view for checking that experience.
+ * Standalone means **this build is the configurator**, i.e. `IND_CONFIGURATOR=true`
+ * at build time. That is the customer template: ids come from `.env`, which is why
+ * ACC_PROJECT_ID / ACC_FOLDER_URN are documented as required alongside that flag.
+ * `?standalone=1` forces the same view for checking the experience.
+ *
+ * Otherwise the configurator renders **embedded**, driven by the demo app's
+ * account/project/folder pickers — in development and in the packaged desktop app
+ * alike.
+ *
+ * This used to be `NODE_ENV !== 'development'`, which conflated "a production
+ * build" with "a customer's configurator build" and broke the packaged Electron
+ * app: it is a production build of the *demo*, so `isStandalone()` returned true,
+ * `App` refused to embed the configurator (see `embedConfigurator`), and the
+ * Demo Configurator toggle changed a flag that nothing could act on. It also meant
+ * a development run silently ignored the ACC_* ids even with IND_CONFIGURATOR=true.
+ * Keying off the build flag makes development and the packaged app behave the same.
  */
 export function isStandalone() {
-  if (process.env.NODE_ENV !== 'development') return true;
+  if (envDefault()) return true;
   try {
     return parseBool(new URLSearchParams(window.location.search).get('standalone')) === true;
   } catch {

@@ -47,18 +47,22 @@ Same code path either way.
 | Where it gets the folder | whatever you selected in the demo app | `frontend/.env` |
 | Good for | trying it against your own products in seconds | seeing the shippable shape |
 
-**A development run is always embedded**, even with `IND_CONFIGURATOR=true`. That
-is deliberate — it lets the demo app's pickers drive the configurator — but it
-means a dev run **ignores `ACC_PROJECT_ID` / `ACC_FOLDER_URN`** and waits for you
-to pick an account, project and folder in the header instead. If you set those
-two vars and nothing seemed to use them, that is why. To get the real standalone
-view in development, add `?standalone=1`:
+**Which one you get depends on the build flag, not on dev vs production.**
+`IND_CONFIGURATOR=true` means "this build *is* the configurator", so it renders
+standalone and reads `ACC_PROJECT_ID` / `ACC_FOLDER_URN` from `.env` — in
+development and in a packaged build alike. Leave the flag off and the configurator
+renders embedded, driven by the demo app's pickers, again in both. `?standalone=1`
+forces the standalone view for checking that experience:
 
 ```
 localhost:3000?standalone=1
 ```
 
-Production builds (`npm run build`) are always standalone and always read `.env`.
+> This used to key off `NODE_ENV`, so a development run was *always* embedded and
+> silently ignored the two `ACC_*` ids, while the packaged desktop app was always
+> standalone — where the Demo Configurator toggle did nothing at all, because the
+> demo app refuses to embed when standalone is on. Both are fixed; dev and the
+> packaged app now behave identically.
 
 **Which app renders** is decided by, in order: `?configurator=1` / `?configurator=0`
 in the URL, then your last click on the **Demo App / Demo Configurator** toggle,
