@@ -1,0 +1,451 @@
+/* Single-page configurator styling. All brand colors come from CSS variables
+   set at runtime from config.branding (see ConfiguratorApp.js). */
+:root {
+  --brand-primary: #0696d7;
+  --brand-accent: #1a1a1a;
+  --brand-bg: #f4f5f7;
+}
+
+.cfg-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--brand-bg);
+  color: var(--brand-accent);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Header ------------------------------------------------------------------ */
+.cfg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 56px;
+  background: #fff;
+  border-bottom: 1px solid #e3e6ea;
+  flex: 0 0 auto;
+}
+.cfg-brand { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.cfg-logo { height: 28px; width: auto; }
+.cfg-logo-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 6px;
+  background: var(--brand-primary); color: #fff; font-weight: 700;
+}
+.cfg-brand-name { font-weight: 600; }
+.cfg-brand-sep { color: #b0b6bd; }
+.cfg-brand-title { color: #6b7280; }
+.cfg-header-right { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+.cfg-signout {
+  background: none; border: 1px solid #d0d5db; border-radius: 6px;
+  padding: 6px 14px; cursor: pointer; color: #374151; font-size: 13px;
+}
+.cfg-signout:hover { background: #f3f4f6; }
+/* Reads as a real button — filled, bordered, dark label — but kept compact so it
+   shares one row with the release chip instead of claiming its own band. */
+.cfg-back {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #f3f4f6; border: 1px solid #d0d5db; border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer; font-size: 12.5px; font-weight: 600; line-height: 1.2;
+  color: #374151;
+  flex: 0 0 auto;
+}
+.cfg-back span { font-size: 13px; line-height: 1; }
+.cfg-back:hover {
+  background: #fff;
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+/* Gallery ----------------------------------------------------------------- */
+.cfg-gallery-wrap { flex: 1 1 auto; overflow-y: auto; padding: 28px; }
+.cfg-center { text-align: center; margin-top: 40px; }
+/* minmax's max caps the track so a 3-product folder doesn't stretch each card to
+   ~380px; justify-content centers the leftover space instead. */
+.cfg-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(232px, 268px));
+  justify-content: center;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.cfg-card {
+  background: #fff; border: 1px solid #e3e6ea; border-radius: 10px;
+  overflow: hidden; display: flex; flex-direction: column;
+  transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
+}
+.cfg-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  border-color: #d3d8de;
+}
+/* White, not grey: these product renders ship with a white background, so a grey
+   container just reads as letterbox bars around the image. */
+.cfg-card-thumb {
+  aspect-ratio: 4 / 3; background: #fff;
+  border-bottom: 1px solid #edeff2;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  padding: 10px;
+}
+.cfg-card-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.cfg-card-thumb-empty { color: #9aa0a6; font-size: 13px; }
+.cfg-card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; }
+.cfg-card-title {
+  font-size: 15px; line-height: 1.35; margin: 0 0 14px;
+  /* Two lines max, so long names wrap instead of truncating mid-word — and every
+     card keeps the same height whether the name is one line or two. */
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; min-height: 2.7em;
+}
+.cfg-card-label {
+  font-size: 12px; font-weight: 500; color: #6b7280; margin-bottom: 5px;
+}
+.cfg-card .cfg-input { font-size: 13px; padding: 7px 9px; }
+.cfg-card-btn { margin-top: 10px; padding: 9px 16px; font-size: 14px; }
+.cfg-card-error { color: #d92d20; font-size: 12px; margin: 8px 0 0; line-height: 1.4; }
+
+/* Body layout: left panel + right viewer ---------------------------------- */
+.cfg-body { display: flex; flex: 1 1 auto; min-height: 0; }
+/* A column, not a scrolling block: the fields scroll inside it while the
+   Configure button stays pinned. A release with twenty parameters must not be
+   able to push the primary action off-screen. */
+.cfg-panel {
+  flex: 0 0 360px;
+  background: #fff;
+  border-right: 1px solid #e3e6ea;
+  padding: 22px 22px 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.cfg-viewer { flex: 1 1 auto; position: relative; background: #2b2d31; min-width: 0; }
+.cfg-viewer-placeholder {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  color: #c4c8ce; text-align: center; padding: 24px;
+}
+.cfg-viewer-placeholder p { margin: 0; }
+.cfg-viewer-note { color: #8b9099; font-size: 13px; }
+/* Dims the stale model while the next one builds. */
+.cfg-viewer-busy {
+  position: absolute; inset: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: rgba(24, 26, 29, 0.62);
+  color: #f0f2f4; font-size: 14px; font-weight: 500;
+  backdrop-filter: blur(1.5px);
+}
+.cfg-viewer-busy .cfg-spinner {
+  border-color: rgba(255, 255, 255, 0.35); border-top-color: #fff;
+  width: 16px; height: 16px;
+}
+
+/* Back + release on one line, so neither takes its own vertical band. */
+.cfg-panel-top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 8px; min-height: 22px;
+}
+
+/* Panel header ------------------------------------------------------------ */
+.cfg-panel-head {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px;
+  padding-bottom: 12px; margin-bottom: 16px;
+  border-bottom: 1px solid #e9ecef;
+}
+.cfg-product-name {
+  font-size: 19px; font-weight: 650; line-height: 1.25; margin: 0;
+  color: var(--brand-accent); letter-spacing: -0.01em;
+}
+/* A quiet chip rather than a second grey line — keeps the product name as the
+   single focal point while still exposing which release is loaded. */
+.cfg-release-chip {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px; border-radius: 999px;
+  background: #eef1f4; border: 1px solid #e2e6ea;
+  font-size: 12px; font-weight: 500; color: #5b6470; white-space: nowrap;
+}
+.cfg-release-default { color: #e0a800; font-size: 13px; line-height: 1; }
+
+/* Form -------------------------------------------------------------------- */
+.cfg-form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+
+/* The scrolling region. Padded on the right so a scrollbar doesn't sit on top
+   of the inputs' focus ring. */
+.cfg-form-fields {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-right: -6px;
+}
+
+/* Pinned action area. The top border tells you the list above it scrolls. */
+.cfg-form-actions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 0 18px;
+  margin-top: 4px;
+  border-top: 1px solid #eceff3;
+  background: #fff;
+}
+.cfg-field { display: flex; flex-direction: column; margin-bottom: 16px; }
+.cfg-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.cfg-desc { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+.cfg-input {
+  padding: 9px 11px; border: 1px solid #d0d5db; border-radius: 6px;
+  font-size: 14px; background: #fff; color: var(--brand-accent);
+}
+.cfg-input:focus { outline: none; border-color: var(--brand-primary); box-shadow: 0 0 0 3px rgba(6, 150, 215, 0.15); }
+
+/* Boolean toggle ----------------------------------------------------------
+   The switch carries its own label to its right, so this field has no
+   .cfg-label above it and needs a little more air than a boxed field. */
+.cfg-field-toggle { margin-bottom: 18px; }
+.cfg-toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+/* Visually hidden, not display:none — it stays focusable and screen readers
+   still announce the real checkbox state. */
+.cfg-toggle-input {
+  position: absolute; width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0);
+}
+.cfg-toggle-track {
+  flex: 0 0 auto; position: relative; width: 40px; height: 20px;
+  border-radius: 10px; background: #c4c8ce;
+  transition: background 120ms ease;
+}
+.cfg-toggle-thumb {
+  position: absolute; top: 1px; left: 1px; width: 18px; height: 18px;
+  border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 120ms ease;
+}
+.cfg-toggle-input:checked + .cfg-toggle-track { background: var(--brand-primary); }
+.cfg-toggle-input:checked + .cfg-toggle-track .cfg-toggle-thumb { transform: translateX(20px); }
+.cfg-toggle-input:focus-visible + .cfg-toggle-track {
+  box-shadow: 0 0 0 3px rgba(6, 150, 215, 0.3);
+}
+.cfg-toggle-label { font-size: 15px; color: var(--brand-accent); }
+.cfg-toggle-readonly { cursor: default; opacity: 0.6; }
+.cfg-empty { color: #6b7280; font-size: 14px; }
+
+.cfg-submit {
+  margin-top: 6px; padding: 11px 16px; border: none; border-radius: 6px;
+  background: var(--brand-primary); color: #fff; font-size: 15px; font-weight: 600;
+  cursor: pointer;
+}
+.cfg-submit:hover:not(:disabled) { filter: brightness(0.95); }
+.cfg-submit:disabled { opacity: 0.6; cursor: default; }
+
+.cfg-error { color: #d92d20; font-size: 13px; margin-top: 12px; }
+
+/* Field constraints + validation errors ----------------------------------- */
+.cfg-unit { font-weight: 400; color: #7b828b; }
+.cfg-meta { font-size: 11.5px; color: #8a9099; margin-top: 5px; }
+.cfg-input-error { border-color: #d92d20; }
+.cfg-input-error:focus { border-color: #d92d20; box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.14); }
+
+/* Action row: Configure plus the download control beside it ----------------
+   Ranked, not equal — Configure fills the row, download is a fixed-width icon
+   button. Two same-weight buttons side by side would compete. */
+.cfg-form-actions-row { display: flex; align-items: stretch; gap: 8px; }
+/* flex-basis 0, not auto: with auto the button is sized from its label, so it
+   visibly resized every time the text changed between "Configure",
+   "Checking values…" and "Creating variant…". At 0 the width is purely the
+   leftover space and stays put. */
+.cfg-form-actions-row .cfg-submit {
+  flex: 1 1 0;
+  min-width: 0;
+  margin-top: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* The drawer occupies part of the pinned pane rather than floating over the
+   fields: the buttons below it never move, the scroll region above simply gets
+   shorter. */
+.cfg-export-drawer {
+  padding: 14px 14px 4px;
+  margin-bottom: 12px;
+  background: #f8fafc;
+  border: 1px solid #e3e6ea;
+  border-radius: 8px;
+}
+.cfg-export-drawer .cfg-field:last-of-type { margin-bottom: 14px; }
+.cfg-export-drawer .cfg-submit { width: 100%; margin-top: 0; }
+
+.cfg-export-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px;
+  border: 1px solid #d0d5db; border-radius: 6px;
+  background: #fff; color: #5f6b7a;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+.cfg-export-btn:hover:not(:disabled) {
+  border-color: var(--brand-primary); color: var(--brand-primary); background: #f7fbfe;
+}
+.cfg-export-btn.is-open {
+  background: var(--brand-primary); border-color: var(--brand-primary); color: #fff;
+}
+/* Dimmed rather than removed: it should still say downloads exist, and that
+   Configure — right next to it — is what unlocks them. */
+.cfg-export-btn:disabled { opacity: 0.45; cursor: default; }
+
+
+/* Development-only API inspector (DebugPanel). Fixed to the viewport so it can
+   be read next to the form it explains. */
+.cfg-debug-fab {
+  position: fixed; right: 16px; bottom: 16px; z-index: 1200;
+  padding: 7px 12px; border: 1px solid #d0d5db; border-radius: 6px;
+  background: #fff; color: #5f6b7a; cursor: pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
+  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.12);
+}
+.cfg-debug-fab:hover { color: var(--brand-primary); border-color: var(--brand-primary); }
+
+.cfg-debug {
+  position: fixed; right: 16px; bottom: 16px; z-index: 1200;
+  width: min(760px, calc(100vw - 32px)); max-height: min(70vh, 720px);
+  display: flex; flex-direction: column;
+  background: #fff; border: 1px solid #d0d5db; border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(16, 24, 40, 0.22);
+}
+.cfg-debug-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 10px; border-bottom: 1px solid #eceff3;
+}
+.cfg-debug-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.cfg-debug-tab {
+  padding: 5px 9px; border: 1px solid transparent; border-radius: 5px;
+  background: none; cursor: pointer; color: #5f6b7a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;
+}
+.cfg-debug-tab:hover { background: #f2f4f7; }
+.cfg-debug-tab.is-active { background: #eaf6fd; border-color: var(--brand-primary); color: var(--brand-primary); }
+.cfg-debug-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+.cfg-debug-btn {
+  padding: 5px 10px; border: 1px solid #d0d5db; border-radius: 5px;
+  background: #fff; cursor: pointer; font-size: 12px; color: #5f6b7a;
+}
+.cfg-debug-btn:hover { background: #f2f4f7; }
+.cfg-debug-sub {
+  padding: 8px 12px 2px; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.04em; color: #8a9099;
+}
+.cfg-debug-key { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: none; word-break: break-all; }
+.cfg-debug-pre {
+  margin: 0; padding: 10px 12px 14px; overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px; line-height: 1.5; color: #1a1f26; white-space: pre;
+  user-select: text;
+}
+.cfg-debug-code { background: #f7f9fb; border-top: 1px solid #eceff3; border-bottom: 1px solid #eceff3; max-height: 220px; }
+
+/* Numeric stepper, after Autodesk's NumericInput: paired carets inside the
+   right edge of the field. Keeping them inside is what lets every entry — text,
+   select and number alike — stay flush on the same left edge. The native spin
+   buttons are hidden so there is one control rather than two competing ones. */
+.cfg-stepper { position: relative; display: flex; }
+.cfg-stepper .cfg-input { flex: 1; min-width: 0; padding-right: 28px; }
+.cfg-stepper input[type='number']::-webkit-outer-spin-button,
+.cfg-stepper input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
+.cfg-stepper input[type='number'] { -moz-appearance: textfield; appearance: textfield; }
+
+.cfg-step-arrows {
+  position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.cfg-step-arrow {
+  display: flex; align-items: center; justify-content: center;
+  padding: 0; border: none; background: none; cursor: pointer;
+  color: #8a9099; line-height: 0;
+}
+.cfg-step-arrow:hover:not(:disabled) { color: var(--brand-primary); }
+.cfg-step-arrow:active:not(:disabled) { color: var(--brand-accent); }
+.cfg-step-arrow:disabled { color: #cdd2d8; cursor: default; }
+
+/* Read-only parameters: the rules compute these, so they must not read as an
+   editable field. Recessed rather than white, muted text, no focus affordance. */
+.cfg-input-readonly {
+  background: #f2f4f7; border-color: #e3e7ec; color: #6b7280;
+  cursor: default; box-shadow: none;
+}
+.cfg-input-readonly:focus { outline: none; border-color: #e3e7ec; box-shadow: none; }
+.cfg-field-error { color: #d92d20; font-size: 12px; margin-top: 5px; line-height: 1.4; }
+
+.cfg-submit { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.cfg-spinner-on-btn { border-color: rgba(255, 255, 255, 0.45); border-top-color: #fff; }
+
+/* Separator between the config form and the downloads panel --------------- */
+.cfg-separator {
+  border: none;
+  border-top: 1px solid #e3e6ea;
+  margin: 26px 0 20px;
+}
+
+/* Downloads --------------------------------------------------------------- */
+.cfg-downloads .cfg-label { font-weight: 500; color: #4b5563; }
+/* Outlined, so Configure stays the panel's primary action. */
+.cfg-downloads .cfg-submit {
+  border: 1px solid var(--brand-primary);
+  background: #fff;
+  color: var(--brand-primary);
+}
+.cfg-downloads .cfg-submit:hover:not(:disabled) { background: rgba(6, 150, 215, 0.08); filter: none; }
+.cfg-downloads .cfg-spinner-on-btn {
+  border-color: rgba(6, 150, 215, 0.3); border-top-color: var(--brand-primary);
+}
+
+.cfg-spinner {
+  width: 13px; height: 13px; flex: 0 0 auto;
+  border: 2px solid #d7dbe0; border-top-color: var(--brand-primary);
+  border-radius: 50%;
+  animation: cfg-spin 0.7s linear infinite;
+}
+@keyframes cfg-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .cfg-spinner { animation-duration: 2.4s; }
+}
+
+/* Login + notice screens -------------------------------------------------- */
+.cfg-login, .cfg-notice {
+  flex: 1 1 auto;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 40px; gap: 8px;
+}
+.cfg-login h1 { font-size: 28px; margin: 0 0 4px; }
+.cfg-login p, .cfg-notice p { color: #4b5563; max-width: 460px; }
+.cfg-login-btn { margin-top: 16px; min-width: 240px; }
+.cfg-notice code { background: #eef0f2; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+
+/* Embedded in the demo app ------------------------------------------------- */
+/* The demo app owns the page chrome, so drop the full-height/background that
+   the standalone configurator sets on .cfg-root. */
+.cfg-root.cfg-embedded {
+  height: auto;
+  min-height: 0;
+  background: transparent;
+}
+.cfg-root.cfg-embedded .cfg-gallery-wrap { padding: 0; overflow: visible; }
+.cfg-root.cfg-embedded .cfg-body { min-height: 520px; }
+/* Configure view while embedded: break out of the products column and cover the
+   window, so the form + viewer get the same space as the standalone template.
+   `fixed` rather than restructuring App.js -- the back arrow just unmounts it. */
+.cfg-root.cfg-fullpage {
+  position: fixed;
+  inset: 0;
+  /* Sits BELOW the demo app's menu bar (64px content + 1px border in App.css)
+     rather than covering it, so the toggle, language picker and user menu stay
+     reachable. z-index under the bar's 1000 keeps it clickable. */
+  top: 65px;
+  z-index: 999;
+  height: calc(100vh - 65px);
+  background: var(--brand-bg);
+  overflow: hidden;
+}

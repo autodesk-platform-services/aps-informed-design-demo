@@ -1,3 +1,68 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Production builds
+frontend/build/
+backend/dist/
+
+# Electron build output
+dist/
+*.exe
+*.msi
+*.dmg
+*.AppImage
+*.snap
+
+# Environment variables — never commit these, they hold the APS client secret.
+# The trailing-glob forms catch copies/backups (.env.bak, .env.old, .env.save),
+# which is how a real secret got committed before. `.env.example` stays tracked.
+.env
+.env.*
+!.env.example
+*.bak
+*.orig
+*.old
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
 .DS_Store
-dist
-node_modules
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Misc
+.cache/
+.temp/
+
+# Backend cache (thumbnails, GLBs, etc.)
+backend/cache/
+
+# Editor/agent configuration — local to whoever is working on this.
+.cursor/
+.claude/
+
+# Lockfiles are not published. They were generated against a private npm
+# mirror and their `resolved` URLs point at it. Every dependency is a public
+# package, so `npm install` works fine; regenerate against registry.npmjs.org
+# if you want pinned installs.
+package-lock.json
+frontend/package-lock.json
+backend/package-lock.json
+
+# Development scaffolding, deliberately not published.
+/test/

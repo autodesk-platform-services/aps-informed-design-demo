@@ -55,8 +55,6 @@ export const pollOutputStatus = async (
   maxAttempts = 60,
   interval = 2000
 ) => {
-  const statusKey = outputId;
-  
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       const statusData = await getOutputStatus(accessToken, outputId, accessId);

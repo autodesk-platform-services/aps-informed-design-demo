@@ -93,9 +93,22 @@ function createWindow() {
     storages: ['cookies', 'localstorage', 'sessionstorage', 'cachestorage']
   }).catch(err => console.log('Could not clear storage:', err));
   
-  // Log all console messages from the renderer process for debugging
-  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
-    console.log(`[Renderer Console ${level}]`, message, `(${sourceId}:${line})`);
+  // Log all console messages from the renderer process for debugging.
+  //
+  // Takes the single event object rather than the old positional
+  // `(event, level, message, line, sourceId)` arguments, which Electron 43
+  // deprecates — it warned about it on every launch. Note `level` is now a STRING
+  // ('debug' | 'info' | 'warning' | 'error'), where it used to be a number with
+  // 3 meaning error.
+  //
+  // One handler, not two: a second listener further down used to re-log the same
+  // errors this one had already printed.
+  mainWindow.webContents.on('console-message', ({ level, message, lineNumber, sourceId }) => {
+    if (level === 'error') {
+      console.error('[Renderer Console Error]', message, 'at', sourceId, ':', lineNumber);
+      return;
+    }
+    console.log(`[Renderer Console ${level}]`, message, `(${sourceId}:${lineNumber})`);
   });
   
   // Log when the page starts loading
@@ -261,13 +274,6 @@ function createWindow() {
       setTimeout(() => {
         mainWindow.loadURL(validatedURL);
       }, 100);
-    }
-  });
-
-  // Handle console messages from the renderer (useful for debugging OAuth issues)
-  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
-    if (level === 3) { // Error level
-      console.error('[Renderer Console Error]', message, 'at', sourceId, ':', line);
     }
   });
 

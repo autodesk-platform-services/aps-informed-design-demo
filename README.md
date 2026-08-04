@@ -1,201 +1,127 @@
-# Informed Design Demo Application
+# Autodesk Informed Design — Demo App & Reference Configurator
 
-A demonstration application showcasing how to work with the **Autodesk Informed Design APIs**. This full-stack application (Node.js backend + React.js frontend) provides a complete example of integrating with Informed Design to access and manage accounts, projects, folders, products, releases, and variants.
+Two working demos on the [Autodesk Informed Design API](https://aps.autodesk.com/autodesk-informed-design-api), in one repo, sharing one backend and one login. Both are meant to be read, run, copied and rewritten.
 
-Products
-![products](assets/readme_products.png)
+| | [**Demo app**](docs/DEMO_APP.md) | [**Reference configurator**](docs/CONFIGURATOR.md) |
+|---|---|---|
+| Shows | how to use the API | what you can build on it |
+| On screen | accounts, projects, folders, products, releases, variants, outputs, IDs, tokens | a product catalog, a form, a 3D preview, downloads |
+| Written for | you, the developer | your end customer |
+| Turn on | `IND_CONFIGURATOR=false` | `IND_CONFIGURATOR=true` |
 
-Projects
-![projects](assets/readme_projects.png)
+Which one loads is that single setting in `frontend/.env`, and in development you can flip between them from the menu bar without signing in again.
 
-Data Exchanges
-![data exchanges](assets/readme_fdx.png)
+> **Handing this to an AI assistant?** Give it [AI_BRIEF.md](AI_BRIEF.md) — a self-contained brief with the API contracts and the behaviours that are not in the public docs. It is written to be pasted whole into Claude Code, Cursor, Copilot or similar.
 
-View models
-![view models](assets/readme_viewer.png)
+---
 
-## Overview
+## Quickstart
 
-This demo application illustrates key patterns and best practices for working with the Informed Design APIs, including:
+**Prerequisites:** Node.js **20.19+** (22 LTS is a good choice), npm 7+, an APS app, and an ACC project containing Informed Design products.
 
-- **Authentication**: 3-legged OAuth (3LO) authentication with Autodesk Platform Services (APS)
-- **Account Management**: Accessing and displaying user accounts
-- **Project & Folder Navigation**: Browsing projects and folders within accounts
-- **Product Management**: Viewing products, releases, and variants
-- **Data Visualization**: Displaying product information, thumbnails, and metadata
-- **File Downloads**: Downloading variant output files
+> Older Node runs the web app fine but cannot package the desktop build — `electron-builder` 26 needs 20.19+. See [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md).
 
-The application uses 3-legged OAuth authentication as part of the setup, but the primary focus is demonstrating how to interact with Informed Design APIs to build applications that work with product data.
-
-## Project Structure
-
-```
-.
-├── backend/          # Node.js Express server
-│   ├── server.js     # Main server file with Informed Design API routes
-│   └── package.json  # Backend dependencies
-├── frontend/         # React.js application
-│   ├── src/          # React source files
-│   │   ├── App.js    # Main application component with Informed Design integration
-│   │   └── components/ # UI components
-│   ├── public/       # Public assets
-│   └── package.json  # Frontend dependencies
-└── electron/         # Electron desktop app configuration
-    ├── main.js       # Electron main process
-    └── preload.js    # Preload script for secure IPC
-```
-
-## Prerequisites
-
-- Node.js (v16 or higher)
-- npm (v7 or higher)
-- Autodesk Platform Services (APS) account and application credentials
-
-## APS Setup
-
-1. **Create an APS Application**:
-   - Go to [APS Developer Portal](https://aps.autodesk.com/myapps)
-   - Create a new application
-   - Note your **Client ID** and **Client Secret**
-
-2. **Configure Redirect URI**:
-   - In your APS application settings, set the **Callback URL** to:
-     - `http://localhost:3000` (for development)
-     - Or your production URL
-
-## Setup Instructions
-
-### Backend Setup
-
-1. Navigate to the backend directory:
 ```bash
-cd backend
+git clone <this-repo> && cd ind-demo
+npm install                     # installs root, frontend and backend
 ```
 
-2. Install dependencies:
-```bash
-npm install
-```
+**1. Create an APS app** at [aps.autodesk.com/myapps](https://aps.autodesk.com/myapps).
 
-3. Create a `.env` file or rename `.env.template` and fill in your APS credentials:
+- Application type must be **Traditional Web App** — this cannot be changed later.
+- Set the **Callback URL** to `http://localhost:3000`.
+
+**2. Add the app to ACC** — Account Admin → Apps & Integrations → **Custom Integrations** → add your **Client ID**, and give it access to the project holding your products.
+
+> Creating the APS app is not enough on its own. Without this every Informed Design call returns 401, and it takes an ACC administrator. ([more](docs/AUTHENTICATION.md#prerequisite-the-aps-app-must-be-added-to-acc))
+
+**3. Backend credentials** — `cp backend/.env.example backend/.env` and fill in:
+
 ```bash
-APS_CLIENT_ID=your_client_id_here
-APS_CLIENT_SECRET=your_client_secret_here
+APS_CLIENT_ID=your_client_id
+APS_CLIENT_SECRET=your_client_secret
 APS_REDIRECT_URI=http://localhost:3000
 ```
 
-4. Start the server:
-```bash
-# Development mode with auto-reload
-npm run dev
+**4. Frontend config** — `cp frontend/.env.example frontend/.env`. The defaults start the demo app, which is where you find the IDs the configurator needs.
 
-# Production mode
-npm start
+**5. Run it:**
+
+```bash
+npm run dev     # backend on :8080, frontend on :3000
 ```
 
-The backend server will run on `http://localhost:8080`
+Sign in with your Autodesk account. If the demo app lists your products, everything above is correct.
 
-### Frontend Setup
+> `.env` files are gitignored, and a pre-commit hook blocks credentials from being committed. **Never commit real credentials** — history is forever, and deleting the file later does not remove it. Rotate anything that leaks.
 
-1. Navigate to the frontend directory:
-```bash
-cd frontend
+**Then:** [set up the configurator](docs/CONFIGURATOR.md) · [tour the demo app](docs/DEMO_APP.md)
+
+---
+
+## How it fits together
+
+```
+Browser                         Backend (:8080)                 Autodesk
+────────                        ───────────────                 ────────
+demo app / configurator ──────► routes/*.js ── Bearer token ──► Informed Design API
+                                holds the client secret         ACC / Data Management
 ```
 
-2. Install dependencies:
-```bash
-npm install
+The backend exists so the client secret never reaches the browser. It is a thin proxy — it forwards, caches briefly, and normalises errors. Both demos share it, along with the API clients and the viewer, so signing in once serves either.
+
+```
+backend/              Express proxy
+  routes/             productRoutes (products, releases, rules), variantRoutes, outputRoutes
+frontend/src/
+  components/         the DEMO APP
+  configurator/       the REFERENCE CONFIGURATOR
+  services/           shared API clients
+  Viewer.js           shared Autodesk Viewer wrapper
+scripts/dev.js        runs backend + frontend, watches frontend/.env
 ```
 
-3. Start the development server:
-```bash
-npm start
-```
+---
 
-The frontend application will run on `http://localhost:3000` (configured to match APS callback URL) and automatically open in your browser.
+## Common setup problems
 
-### Electron Desktop App
+Almost every first-run failure is one of these.
 
-The application can also be built as a standalone Electron desktop application:
+| Symptom | Cause |
+|---|---|
+| `401` on `/products` or `/releases` | the app is **not added to ACC** (quickstart step 2), or you are using a 2-legged token — Informed Design requires 3LO |
+| "The requested resource does not exist" at login | the APS app is the **wrong type** — it must be Traditional Web App. Cannot be changed; create a new app. |
+| Login loop / bounced back to sign-in | **Callback URL** must match `APS_REDIRECT_URI` character for character — trailing slash and case included |
+| "No Informed Design products were found" | wrong folder, or the folder has no published products |
 
-1. Build the application:
-```bash
-npm run build
-```
+`GET /api/aps/diagnose` reports what the backend thinks your setup is and hands back a ready-made authorization URL. If pasting that URL into a browser fails the same way the app does, the problem is your APS app configuration rather than this code.
 
-2. The built application will be in the `dist/` directory as a DMG file (macOS) or installer for your platform.
+Configurator-specific issues are in [docs/CONFIGURATOR.md](docs/CONFIGURATOR.md#troubleshooting).
 
-The Electron app provides the same functionality as the web version but runs as a native desktop application with improved OAuth handling across different origins.
-
-## Features
-
-### Informed Design API Integration
-
-- **Account Access**: Browse and select Autodesk accounts
-- **Project Navigation**: Navigate through projects and folders
-- **Product Discovery**: View products within folders with metadata
-- **Release Management**: Access product releases and their details
-- **Variant Exploration**: Browse variants within releases
-- **File Downloads**: Download variant output files
-- **ID Management**: View and copy all relevant IDs (Account, Project, Folder, Product, Release, Variant)
-
-### Backend API Endpoints
-
-- `GET /health` - Health check endpoint
-- `GET /api/aps/config` - Get APS configuration for OAuth
-- `POST /api/aps/token` - Exchange authorization code for access token (3LO)
-- `GET /api/acc/accounts` - Get user's accounts
-- `GET /api/acc/accounts/:accountId/projects` - Get projects for an account
-- `GET /api/acc/projects/:projectId/folders` - Get folders for a project
-- `GET /api/informed-design/projects/:projectId/folders/:folderId/products` - Get products in a folder
-- `GET /api/informed-design/releases` - Get releases for a product
-- `GET /api/informed-design/variants` - Get variants for a release
-- `GET /api/informed-design/variants/:variantId/output` - Download variant output file
-
-### Frontend Features
-
-- Clean, modern UI with Autodesk branding
-- 3-legged OAuth 2.0 authentication with APS
-- Hierarchical navigation (Accounts → Projects → Folders → Products → Releases → Variants)
-- Product and variant thumbnails
-- Token and ID dialogs for debugging and reference
-- Secure token management
-- Electron desktop app support
+---
 
 ## Authentication
 
-This application uses **3-legged OAuth (3LO)** authentication with Autodesk Platform Services to securely authenticate users and access Informed Design APIs. The authentication flow is a necessary prerequisite for working with Informed Design APIs, as it provides user-specific access tokens required for API calls.
+This repo uses **3-legged OAuth only** — every user signs in with their own Autodesk account. **Secure Service Accounts (SSA) are not wired up**, and for a public-facing configurator SSA is very likely what you want instead.
 
-### Authentication Flow:
+[docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) covers both, with links to the SSA documentation and what would change here.
 
-1. **User initiates login**: User clicks "Login with Autodesk" button
-2. **Authorization request**: User is redirected to Autodesk's authorization page
-3. **User authentication**: User logs in with their Autodesk credentials and grants permissions
-4. **Authorization code**: After authentication, Autodesk redirects back with an authorization code
-5. **Token exchange**: Frontend sends the code to the backend `/api/aps/token` endpoint
-6. **Secure token exchange**: Backend securely exchanges the code for an access token (server-side only)
-7. **Token storage**: Access token is stored and used for subsequent Informed Design API calls
+---
 
-### Why 3-Legged OAuth?
+## Docs
 
-- **User-specific access**: Access tokens represent the authenticated user, required for accessing their Informed Design data
-- **Secure**: Client secret never exposed to the frontend
-- **Required for Informed Design**: All Informed Design API endpoints require authenticated user tokens
+| | |
+|---|---|
+| [AI_BRIEF.md](AI_BRIEF.md) | **the one to hand an AI** — API contracts and the non-obvious behaviours |
+| [docs/DEMO_APP.md](docs/DEMO_APP.md) | the API demo — what it does and why you would use it |
+| [docs/CONFIGURATOR.md](docs/CONFIGURATOR.md) | the reference configurator — setup, branding, how the form works |
+| [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) | 3LO today, the SSA path, and the ACC prerequisite |
+| [docs/BUILD_GUIDE.md](docs/BUILD_GUIDE.md) | how the demo app is put together, feature by feature |
+| [docs/ELECTRON_BUILD_GUIDE.md](docs/ELECTRON_BUILD_GUIDE.md) | packaging as a desktop app |
+| [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md) | the required Node version, and what `npm audit` reports and why |
 
-## Development
+## Licence and support
 
-The frontend is configured to proxy API requests to the backend server (see `package.json` proxy setting). This means you can make requests to `/api/*` from the frontend, and they will be automatically forwarded to `http://localhost:8080`.
+Sample code, provided as-is, to illustrate Informed Design API usage. Not a supported Autodesk product. Review it before using anything here in production.
 
-## Security Notes
-
-- Client secret is never exposed to the frontend (token exchange happens server-side)
-- All user inputs are validated and sanitized
-- Environment variables are used for sensitive credentials
-- CORS is properly configured
-- Access tokens are stored in localStorage (consider using httpOnly cookies for production)
-- Input validation prevents injection attacks
-
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
-
+Official API docs: <https://aps.autodesk.com/en/docs/informed-design/v1/>

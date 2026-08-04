@@ -16,6 +16,7 @@ export const useAccountsProjects = (isAuthenticated) => {
   const [accProjects, setAccProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [loadingProjects, setLoadingProjects] = useState(false);
+  const [projectsError, setProjectsError] = useState(null);
 
   const fetchAccAccounts = useCallback(async (accessToken) => {
     try {
@@ -34,17 +35,23 @@ export const useAccountsProjects = (isAuthenticated) => {
     if (!hubId) {
       setAccProjects([]);
       setSelectedProject(null);
+      setProjectsError(null);
       return;
     }
 
     try {
       setLoadingProjects(true);
+      setProjectsError(null);
       const projects = await projectService.fetchProjects(accessToken, hubId);
       setAccProjects(projects);
       return projects;
     } catch (err) {
+      // This used to swallow the error and just empty the list, which rendered
+      // as a bare "No projects" — indistinguishable from a hub that genuinely
+      // has none, and with no way to tell that a request had failed at all.
       setAccProjects([]);
       setSelectedProject(null);
+      setProjectsError(err?.message || 'Failed to load projects');
     } finally {
       setLoadingProjects(false);
     }
@@ -55,6 +62,7 @@ export const useAccountsProjects = (isAuthenticated) => {
       setSelectedAccount(null);
       setSelectedProject(null);
       setAccProjects([]);
+      setProjectsError(null);
       localStorage.removeItem('saved_account_id');
       localStorage.removeItem('saved_project_id');
       return;
@@ -76,6 +84,10 @@ export const useAccountsProjects = (isAuthenticated) => {
     const accessToken = localStorage.getItem('aps_access_token');
     if (accessToken && hubId) {
       await fetchAccProjects(accessToken, hubId);
+    } else if (hubId) {
+      // Projects were just cleared above, so returning quietly here leaves a
+      // selected hub next to an empty "No projects" dropdown and no clue why.
+      setProjectsError('Not signed in, or the session expired. Sign in again to load projects.');
     }
   }, [selectedAccount, fetchAccProjects]);
 
@@ -142,6 +154,7 @@ export const useAccountsProjects = (isAuthenticated) => {
     accProjects,
     selectedProject,
     loadingProjects,
+    projectsError,
     fetchAccAccounts,
     fetchAccProjects,
     handleAccountChange,

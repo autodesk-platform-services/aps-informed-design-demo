@@ -1,0 +1,5 @@
+#!/bin/sh
+# Blocks commits containing credentials. See scripts/check-secrets.js.
+# Installed by `npm install` (postinstall sets core.hooksPath to this directory).
+# Deliberate override: git commit --no-verify
+exec node "$(git rev-parse --show-toplevel)/scripts/check-secrets.js"

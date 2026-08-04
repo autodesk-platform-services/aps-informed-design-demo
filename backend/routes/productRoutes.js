@@ -256,6 +256,7 @@ router.get('/releases', requireAuth, async (req, res) => {
       }
       
       data = await response.json();
+
       setCached(cache.api, releasesCacheKey, data, CACHE_TTL.api);
     }
     
@@ -337,12 +338,7 @@ router.get('/releases/:releaseId', requireAuth, async (req, res) => {
       }
 
       data = await response.json();
-      
-      
-      
-      // Log the full response to see what outputSettings structure is available
-      
-      
+
       
       // Check for nested data structure
       if (data.data) {
@@ -412,9 +408,8 @@ router.get('/releases/:releaseId', requireAuth, async (req, res) => {
     
     // Remove "b." prefix from release IDs in the response
     const processedData = removeBPrefix(data, ['id', 'releaseId', 'release_id']);
-    
-    // Log what we're returning
-    
+
+
     // Return the processed release data
     res.json(processedData);
   } catch (error) {
@@ -463,7 +458,7 @@ router.get('/rules/:rulesKey', requireAuth, async (req, res) => {
       data = await response.json();
       setCached(cache.api, rulesCacheKey, data, CACHE_TTL.api);
     }
-    
+
     res.json(data);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error while fetching rules', details: error.message });
@@ -516,7 +511,7 @@ router.post('/rules:evaluate', requireAuth, async (req, res) => {
     }
     
     const data = JSON.parse(responseText);
-    
+
     // Check if the response contains an error property (even with 200 status)
     if (data.error && data.error.errors && data.error.errors.length > 0) {
       // Build a user-friendly error message from the error details

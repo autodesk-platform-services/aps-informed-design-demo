@@ -10,10 +10,11 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "node ../scripts/with-config-env.js react-scripts start",
+    "build": "node ../scripts/with-config-env.js react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "postinstall": "patch-package"
   },
   "eslintConfig": {
     "extends": [
@@ -48,5 +49,8 @@
     "sourcemap-codec": "npm:@jridgewell/sourcemap-codec@^1.4.15",
     "svgo": "^3.0.0",
     "source-map": "^0.7.4"
+  },
+  "devDependencies": {
+    "patch-package": "^8.0.1"
   }
 }

@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import './Viewer.css';
 import { useI18n } from './i18n/I18nContext';
 
-function Viewer({ svfUrl: propSvfUrl, token: propToken, isUrn: propIsUrn, viewGuid: propViewGuid, onModelLoaded, onSelectionChange }) {
+function Viewer({ svfUrl: propSvfUrl, token: propToken, isUrn: propIsUrn, viewGuid: propViewGuid, onModelLoaded, onSelectionChange, autoFit = false }) {
   const { t } = useI18n();
   const viewerContainer = useRef(null);
   const viewerInstance = useRef(null);
@@ -105,7 +105,28 @@ function Viewer({ svfUrl: propSvfUrl, token: propToken, isUrn: propIsUrn, viewGu
               }
               
               viewerInstance.current = viewer;
-              
+
+              // Frame whatever just loaded.
+              //
+              // The configurator reloads this same viewer for every new variant,
+              // and the camera survives the reload — so a model built at larger
+              // dimensions than the last one opens part-way off screen. Fitting
+              // on each geometry load reframes it. `fitToView()` with no
+              // arguments fits the whole model.
+              if (autoFit) {
+                try {
+                  viewer.addEventListener(Autodesk.Viewing.GEOMETRY_LOADED_EVENT, () => {
+                    try {
+                      viewer.fitToView();
+                    } catch (err) {
+                      console.warn('[Viewer] fitToView failed:', err);
+                    }
+                  });
+                } catch (err) {
+                  console.warn('[Viewer] could not attach auto-fit listener:', err);
+                }
+              }
+
               try {
                 viewer.start();
               } catch (err) {
@@ -1752,7 +1773,7 @@ function Viewer({ svfUrl: propSvfUrl, token: propToken, isUrn: propIsUrn, viewGu
         viewerInstance.current = null;
       }
     };
-  }, [propSvfUrl, propToken, propIsUrn, propViewGuid]);
+  }, [propSvfUrl, propToken, propIsUrn, propViewGuid, autoFit]);
 
   return (
     <div className="viewer-container">
